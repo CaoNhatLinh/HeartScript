@@ -13,6 +13,7 @@ import { HIM_EMAILS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Editor from '@monaco-editor/react';
+import ValentineEntry from '../miniprojects/valentine/ValentineEntry';
 
 export function ProjectsSection() {
     const { user } = useAuthStore();
@@ -20,7 +21,23 @@ export function ProjectsSection() {
         query(qRef, orderByChild('createdAt'))
     );
     // Newest projects first
-    const displayedProjects = [...projects].reverse();
+    const dbProjects = [...projects].reverse();
+
+    // Virtual special projects
+    const specialProjects: Project[] = [
+        {
+            id: 'valentine-3d',
+            title: 'Valentine 3D Room',
+            description: 'A magical 3D world with roses, floating memories and interactive gifts.',
+            code: '',
+            type: 'react',
+            isVisibleToHer: true,
+            createdAt: 1707868800000, // Feb 14, 2024 (approx)
+            userId: 'system'
+        }
+    ];
+
+    const displayedProjects = [...specialProjects, ...dbProjects];
     const [runningProject, setRunningProject] = useState<Project | null>(null);
     const [editingProject, setEditingProject] = useState<Project | null>(null);
     const [editorCode, setEditorCode] = useState('');
@@ -281,10 +298,12 @@ export function ProjectsSection() {
                             Running: {runningProject?.title}
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="flex-1 bg-white w-full h-full relative">
-                        {runningProject && (
+                    <div className="flex-1 bg-black w-full h-full relative">
+                        {runningProject?.id === 'valentine-3d' ? (
+                            <ValentineEntry />
+                        ) : runningProject && (
                             <iframe
-                                className="w-full h-full border-0"
+                                className="w-full h-full border-0 bg-white"
                                 srcDoc={runningProject.code}
                                 title="Project Preview"
                                 sandbox="allow-scripts allow-modals"
