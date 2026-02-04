@@ -1,12 +1,19 @@
-import { useRef, useState, useMemo } from 'react';
+"use client";
+
+import React, { useRef, useState, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Image, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
-// Dynamically pull all images from the assets/img folder so adding new images updates the list (Vite supports HMR)
-const imagesDict = import.meta.glob('/src/assets/img/*', { eager: true, import: 'default' }) as Record<string, string>;
-const IMAGE_URLS = Object.values(imagesDict) as string[];
+// Next.js static asset paths
+const IMAGE_URLS = [
+    '/valentine/img/anh1.png',
+    '/valentine/img/anh2.png',
+    '/valentine/img/anh3.png',
+    '/valentine/img/anh4.png',
+    '/valentine/img/anh5.png',
+];
 
 interface MemoryPhotoParams {
     visible: boolean;

@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useEffect } from 'react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { VisualStoryScene } from '../3d/VisualStoryScene';
@@ -52,3 +54,4 @@ export const SceneManager: React.FC = React.memo(() => {
         </group>
     );
 });
+SceneManager.displayName = 'SceneManager';

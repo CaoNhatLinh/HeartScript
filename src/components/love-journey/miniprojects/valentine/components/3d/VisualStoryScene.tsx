@@ -1,3 +1,5 @@
+"use client";
+
 import React from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
@@ -183,6 +185,7 @@ export const VisualStoryScene: React.FC = React.memo(() => {
         </group>
     );
 });
+VisualStoryScene.displayName = 'VisualStoryScene';
 
 // Preload the model to prevent stutter
 useGLTF.preload('/valentine/models/charator.glb');

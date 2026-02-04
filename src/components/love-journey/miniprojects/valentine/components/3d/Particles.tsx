@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
@@ -12,7 +14,7 @@ const ParticlesInner: React.FC<{ count?: number }> = ({ count = 50 }) => {
 
     // Create particles data using useState for lazy init once (fixes pure render lint)
     const [particles] = useState(() => {
-        const temp: any[] = [];
+        const temp: { t: number, factor: number, speed: number, xFactor: number, yFactor: number, zFactor: number, mx: number, my: number }[] = [];
         for (let i = 0; i < count; i++) {
             const t = Math.random() * 100;
             const factor = 20 + Math.random() * 100;

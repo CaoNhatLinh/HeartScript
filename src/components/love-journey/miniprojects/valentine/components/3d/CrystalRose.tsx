@@ -1,3 +1,5 @@
+"use client";
+
 // fix@[valentine/src/components/3d/CrystalRose.tsx]
 // Nâng cấp Cinematic Refinement: Geometry Profile, Weighted Opening, và Gradient Shader
 // Khắc phục triệt để lỗi Shader và loại bỏ các kiểu 'any' không cần thiết.
@@ -150,6 +152,7 @@ const PetalMaterial = React.memo(({
         />
     );
 });
+PetalMaterial.displayName = 'PetalMaterial';
 
 interface PetalData {
     id: number;
@@ -224,6 +227,7 @@ const CrystalPetal = React.memo(({
         </animated.group>
     );
 });
+CrystalPetal.displayName = 'CrystalPetal';
 
 /**
  * Main Luxury Crystal Rose Component
@@ -493,3 +497,4 @@ export const CrystalRose: React.FC<{
         </group>
     );
 });
+CrystalRose.displayName = 'CrystalRose';

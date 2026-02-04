@@ -1,3 +1,5 @@
+"use client";
+
 // React import and hooks below
 import { Canvas } from '@react-three/fiber';
 import { Analytics } from "@vercel/analytics/react"
@@ -58,6 +60,7 @@ const ComposerEffects: React.FC<{
     </>
   );
 });
+ComposerEffects.displayName = 'ComposerEffects';
 
 export default function ValentineEntry() {
   const {
