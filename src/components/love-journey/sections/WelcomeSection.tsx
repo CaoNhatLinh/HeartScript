@@ -54,7 +54,7 @@ export function WelcomeSection() {
     if (!mounted) return null; // Tránh Hydration Mismatch
 
     return (
-        <section className="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#faf9f6] snap-start shrink-0">
+        <section className="h-screen w-screen flex flex-col items-center justify-center relative overflow-hidden bg-[#faf9f6] snap-start shrink-0" suppressHydrationWarning>
             {/* Mesh Gradient Background */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <motion.div

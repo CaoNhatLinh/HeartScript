@@ -1,12 +1,33 @@
+'use client';
+
 import React, { useRef, useState } from 'react';
 import * as THREE from 'three';
-import { Image } from '@react-three/drei';
+import { useTexture } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
-// Import all images dynamically
-const imagesDict = import.meta.glob('/src/assets/img/*', { eager: true, import: 'default' }) as Record<string, string>;
-const IMAGE_URLS = Object.values(imagesDict) as string[];
+const MemoryImage: React.FC<{ url: string; position: [number, number, number] }> = ({ url, position }) => {
+  const texture = useTexture(url);
+
+  return (
+    <mesh position={position}>
+      <planeGeometry args={[1.0, 1.0]} />
+      <meshBasicMaterial map={texture} toneMapped={false} side={THREE.DoubleSide} />
+    </mesh>
+  );
+};
+
+// Import all images manually (Turbopack compatible)
+const IMAGE_URLS = [
+  '/valentine/img/anh1.png',
+  '/valentine/img/anh2.png',
+  '/valentine/img/anh3.png',
+  '/valentine/img/anh4.png',
+  '/valentine/img/anh5.png',
+];
+
+// Preload to avoid pop-in
+IMAGE_URLS.forEach(url => useTexture.preload(url));
 
 export const MemoryGroup: React.FC<{ visible: boolean; isFinalMode?: boolean }> = ({ visible, isFinalMode = false }) => {
   const groupRef = useRef<THREE.Group>(null);
@@ -15,7 +36,9 @@ export const MemoryGroup: React.FC<{ visible: boolean; isFinalMode?: boolean }> 
   const performanceLevel = useExperienceStore((s) => s.performanceLevel);
 
   // Precompute base X positions
-  const basePositions = IMAGE_URLS.map((_, i) => (i - (IMAGE_URLS.length - 1) / 2) * 1.3);
+  const basePositions = React.useMemo(() =>
+    IMAGE_URLS.map((_, i) => (i - (IMAGE_URLS.length - 1) / 2) * 1.3),
+    []);
 
   // Single useFrame drives all motion for the group to reduce per-object frames
   useFrame((state, delta) => {
@@ -58,15 +81,8 @@ export const MemoryGroup: React.FC<{ visible: boolean; isFinalMode?: boolean }> 
     }
   });
 
-  // if (!visible || IMAGE_URLS.length === 0) return null; // FIX: Keep mounted to avoid lag
-
   return (
-    <group ref={groupRef} visible={true} scale={visible ? 1 : 0.0001}>
-      {/* Connecting line */}
-      <group position={[0, 1.8, -0.5]}>
-        {/* Use a subtle curved line or small decoration here if desired */}
-      </group>
-
+    <group ref={groupRef} visible={visible}>
       {IMAGE_URLS.map((url, i) => (
         <group
           key={i}
@@ -74,17 +90,29 @@ export const MemoryGroup: React.FC<{ visible: boolean; isFinalMode?: boolean }> 
           onClick={(e) => { e.stopPropagation(); setFocusIndex((f) => (f === i ? null : i)); }}
           position={[basePositions[i], 1.8, -0.5]}
         >
+          {/* Frame */}
           <mesh position={[0, 0, -0.01]}>
             <planeGeometry args={[1.2, 1.5]} />
             <meshStandardMaterial color="#f0e6d2" roughness={0.8} metalness={0.1} />
           </mesh>
-          <Image url={url} scale={[1.0, 1.0]} position={[0, 0.05, 0.02]} transparent />
+
+          {/* Photo with Suspense Fallback */}
+          <React.Suspense fallback={
+            <mesh position={[0, 0.05, 0.02]}>
+              <planeGeometry args={[1.0, 1.0]} />
+              <meshStandardMaterial color="#333" />
+            </mesh>
+          }>
+            <MemoryImage url={url} position={[0, 0.05, 0.02]} />
+          </React.Suspense>
         </group>
       ))}
 
       {/* Final heart photo */}
       <group position={[0, 0.5, 0.5]}>
-        <FinalHeartPhoto visible={!!isFinalMode} url={IMAGE_URLS[0]} />
+        <React.Suspense fallback={null}>
+          <FinalHeartPhoto visible={!!isFinalMode} url={IMAGE_URLS[0]} />
+        </React.Suspense>
       </group>
     </group>
   );
@@ -104,14 +132,14 @@ const FinalHeartPhoto: React.FC<{ visible: boolean; url: string }> = ({ visible,
       <pointLight color="#ff4d6d" intensity={visible ? 1.5 : 0} distance={3} decay={2} />
       <mesh position={[0, 0, -0.05]}>
         <planeGeometry args={[2.4, 2.8]} />
-        <meshBasicMaterial color="#ffc0cb" transparent opacity={0.3} />
+        <meshBasicMaterial color="#ffc0cb" />
       </mesh>
       <group>
         <mesh position={[0, 0, -0.01]}>
           <planeGeometry args={[1.2, 1.5]} />
           <meshStandardMaterial color="#f0e6d2" roughness={0.8} metalness={0.1} />
         </mesh>
-        <Image url={url} scale={[1.0, 1.0]} position={[0, 0.1, 0.01]} transparent />
+        <MemoryImage url={url} position={[0, 0.1, 0.01]} />
       </group>
     </group>
   );

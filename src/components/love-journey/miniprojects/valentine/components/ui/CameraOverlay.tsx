@@ -6,8 +6,8 @@ import {
     Sun, Contrast, Palette, Wand2
 } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
-import { FaceMesh, type Results } from '@mediapipe/face_mesh';
-import { Camera } from '@mediapipe/camera_utils';
+// We import types only to avoid build-time export errors with MediaPipe libraries
+import type { Results } from '@mediapipe/face_mesh';
 
 interface CameraFilters {
     brightness: number;
@@ -49,8 +49,8 @@ export const CameraOverlay: React.FC = () => {
     const hideControlsTimer = useRef<number | null>(null);
 
     // AI Refs
-    const faceMeshRef = useRef<FaceMesh | null>(null);
-    const cameraRef = useRef<Camera | null>(null);
+    const faceMeshRef = useRef<any>(null);
+    const cameraRef = useRef<any>(null);
 
     // Local state
     const [stream, setStream] = useState<MediaStream | null>(null);
@@ -95,8 +95,19 @@ export const CameraOverlay: React.FC = () => {
 
         setIsAiLoading(true);
         try {
-            const faceMesh = new FaceMesh({
-                locateFile: (file) => {
+            // Dynamically require MediaPipe to avoid SSR and build-time export issues
+            const faceMeshBundle = require('@mediapipe/face_mesh');
+            const cameraBundle = require('@mediapipe/camera_utils');
+
+            const FaceMeshClass = faceMeshBundle.FaceMesh || (faceMeshBundle.default && faceMeshBundle.default.FaceMesh) || faceMeshBundle.default;
+            const CameraClass = cameraBundle.Camera || (cameraBundle.default && cameraBundle.default.Camera) || cameraBundle.default;
+
+            if (!FaceMeshClass || !CameraClass) {
+                throw new Error("MediaPipe libraries failed to load properly");
+            }
+
+            const faceMesh = new FaceMeshClass({
+                locateFile: (file: string) => {
                     return `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`;
                 }
             });
@@ -112,7 +123,7 @@ export const CameraOverlay: React.FC = () => {
             faceMeshRef.current = faceMesh;
 
             if (videoRef.current) {
-                const camera = new Camera(videoRef.current, {
+                const camera = new CameraClass(videoRef.current, {
                     onFrame: async () => {
                         if (faceMeshRef.current && videoRef.current) {
                             await faceMeshRef.current.send({ image: videoRef.current });

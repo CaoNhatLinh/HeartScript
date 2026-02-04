@@ -4,6 +4,13 @@ import type { LayerKey } from '../../store/useExperienceStore';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { PerformanceControls } from './PerformanceControls';
 
+// Type declaration for Vite's import.meta.glob
+declare global {
+  interface ImportMeta {
+    glob: (pattern: string, options?: { eager?: boolean; import?: string }) => Record<string, any>;
+  }
+}
+
 // NOTE: DebugPanel uses Vite import.meta.glob; ensure new images in /src/assets/img are picked up in dev.
 
 // Helper Slider Component
@@ -202,8 +209,7 @@ export const DebugPanel: React.FC = () => {
     const setParam = useExperienceStore((s) => s.setLayerParam);
 
     // Gather image list for memory photo info
-    const imagesDict = import.meta.glob('/src/assets/img/*', { eager: true, import: 'default' }) as Record<string, string>;
-    const imageList = Object.values(imagesDict) as string[];
+    const imageList = ['/valentine/img/anh1.png', '/valentine/img/anh2.png', '/valentine/img/anh3.png', '/valentine/img/anh4.png', '/valentine/img/anh5.png'];
     const refreshImages = () => window.location.reload();
 
     return (

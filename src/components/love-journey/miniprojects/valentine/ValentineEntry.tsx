@@ -104,10 +104,9 @@ export default function ValentineEntry() {
               powerPreference: "high-performance",
               stencil: false,
               depth: true,
-              toneMappingExposure: 1.0,
-              preserveDrawingBuffer: true
+              toneMappingExposure: 1.0
             }}
-            dpr={performanceLevel === 'low' ? 0.8 : [1, 1.25]} // Aggressive resolution downscaling
+            dpr={1}
           >
             <color attach="background" args={['#120916']} />
             <BackgroundGradient />
@@ -130,9 +129,9 @@ export default function ValentineEntry() {
               shadow-mapSize={performanceLevel === 'high' ? [512, 512] : [256, 256]}
               shadow-bias={-0.004}
             >
-              {performanceLevel === 'high' && currentScene !== 'prelude' && (
+              {/* {performanceLevel === 'high' && currentScene !== 'prelude' && (
                 <orthographicCamera attach="shadow-camera" args={[-8, 8, 8, -8]} />
-              )}
+              )} */}
             </directionalLight>
 
             <ambientLight intensity={layerParams.ambientIntensity ?? 0.15} color="#F8C8DC" />
@@ -141,7 +140,7 @@ export default function ValentineEntry() {
             <LayerManager />
 
             {/* Post-Processing Gates - drastically reduce passes */}
-            <EffectComposer enableNormalPass={false} multisampling={0} enabled={performanceLevel !== 'low'}>
+            {/* <EffectComposer enableNormalPass={false} multisampling={0} enabled={performanceLevel !== 'low'}>
               <ComposerEffects
                 layerParams={layerParams}
                 activeLayers={activeLayers}
@@ -149,7 +148,7 @@ export default function ValentineEntry() {
                 currentScene={currentScene}
                 FilmGrainComponent={FilmGrainComponent}
               />
-            </EffectComposer>
+            </EffectComposer> */}
           </Canvas>
         </div>
 

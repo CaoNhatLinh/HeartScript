@@ -1,5 +1,9 @@
-import LoveJourneyMap from '@/components/love-journey/LoveJourneyMap';
+'use client';
+
+import dynamic from 'next/dynamic';
+
+const LoveJourneyMap = dynamic(() => import('@/components/love-journey/LoveJourneyMap'), { ssr: false });
 
 export default function DashboardPage() {
-    return <LoveJourneyMap />;
+    return <div suppressHydrationWarning><LoveJourneyMap /></div>;
 }

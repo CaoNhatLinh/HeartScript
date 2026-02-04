@@ -28,7 +28,8 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
     // We use a ref to hold the line geometry to update it every frame
     // Dynamic Line Generation
     // We use a ref to hold the line geometry to update it every frame
-    const lineRef = useRef<THREE.Mesh>(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lineRef = useRef<any>(null);
     const count = IMAGE_URLS.length;
 
     // Base positions (static X distribution)
@@ -74,14 +75,13 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
         };
 
         // Update Line Geometry
-        const lineObj = lineRef.current as unknown as { geometry: { setPositions: (p: number[]) => void } };
-        if (lineObj && lineObj.geometry) {
+        if (lineRef.current && lineRef.current.geometry) {
             const flatPoints: number[] = [];
             for (let i = 0; i <= 30; i++) {
                 const x = -6 + (12 * (i / 30));
                 flatPoints.push(x, getWindY(x) + 0.6, getWindZ(x));
             }
-            lineObj.geometry.setPositions(flatPoints);
+            lineRef.current.geometry.setPositions(flatPoints);
         }
     });
 
@@ -91,7 +91,7 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
         <group visible={visible}>
             {/* The Connecting String */}
             <Line
-                ref={lineRef as unknown as React.Ref<THREE.Mesh>}
+                ref={lineRef}
                 points={initialPoints}
                 color="#8b5a2b"
                 lineWidth={1.5}
@@ -206,7 +206,6 @@ const SwayingPhotoFrame: React.FC<{
             </mesh>
             <Image
                 url={url}
-                alt={`Memory ${index}`}
                 scale={[1.0, 1.0]}
                 position={[0, 0.1, 0.01]}
                 transparent
@@ -239,7 +238,7 @@ const FinalHeartPhoto: React.FC<{ visible: boolean; url: string }> = ({ visible,
                     <planeGeometry args={[1.2, 1.5]} />
                     <meshStandardMaterial color="#f0e6d2" roughness={0.8} metalness={0.1} />
                 </mesh>
-                <Image url={url} alt="Final Memory" scale={[1.0, 1.0]} position={[0, 0.1, 0.01]} transparent />
+                <Image url={url} scale={[1.0, 1.0]} position={[0, 0.1, 0.01]} transparent />
             </group>
         </group>
     )

@@ -119,11 +119,12 @@ export default function LoveJourneyMap() {
     ];
 
     return (
-        <div className="relative w-screen h-screen bg-neutral-900 overflow-hidden font-sans">
-            <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-[60]">
+        <div className="relative w-screen h-screen bg-neutral-900 overflow-hidden font-sans" suppressHydrationWarning>
+            <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-[60]" suppressHydrationWarning>
                 <motion.div
                     style={{ scaleX, originX: 0 }}
                     className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                    suppressHydrationWarning
                 />
             </div>
 
@@ -133,6 +134,7 @@ export default function LoveJourneyMap() {
                 onScroll={handleScroll}
                 className="flex w-full h-full overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar"
                 style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+                suppressHydrationWarning
             >
                 {/* 1. Introduction & Counter */}
                 <div id="section-0" className="snap-start shrink-0"><WelcomeSection /></div>

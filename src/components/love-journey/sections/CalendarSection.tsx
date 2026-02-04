@@ -28,7 +28,8 @@ import {
     DialogContent,
     DialogHeader,
     DialogTitle,
-    DialogTrigger
+    DialogTrigger,
+    DialogDescription
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -105,11 +106,37 @@ export function CalendarSection() {
     const selectedDayEvents = selectedDate ? getEventsForDay(selectedDate) : [];
 
     return (
-        <section className="h-screen w-screen relative overflow-hidden bg-[#faf9f6] snap-start shrink-0 flex items-center justify-center p-6 md:p-12">
+        <section className="h-screen w-screen relative overflow-hidden bg-[#faf9f6] snap-start shrink-0 flex items-center justify-center p-6 md:p-12" suppressHydrationWarning>
             {/* Soft Background Accents */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute -top-[10%] -left-[10%] w-[60%] h-[60%] bg-rose-100/30 rounded-full blur-[120px]" />
                 <div className="absolute -bottom-[10%] -right-[10%] w-[60%] h-[60%] bg-indigo-100/30 rounded-full blur-[120px]" />
+            </div>
+
+            {/* Floating Background Elements */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                {[...Array(8)].map((_, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 100, x: Math.random() * 100 }}
+                        animate={{
+                            opacity: [0, 0.6, 0],
+                            y: -120,
+                            x: Math.random() * 60 - 30,
+                            rotate: [0, 20, -20, 0]
+                        }}
+                        transition={{
+                            duration: 12 + Math.random() * 8,
+                            repeat: Infinity,
+                            delay: Math.random() * 5,
+                            ease: "linear"
+                        }}
+                        className="absolute bottom-0 text-rose-200/60"
+                        style={{ left: `${Math.random() * 100}%` }}
+                    >
+                        {i % 2 === 0 ? <Heart className="w-6 h-6 fill-rose-100" /> : <Sparkles className="w-4 h-4 text-yellow-200" />}
+                    </motion.div>
+                ))}
             </div>
 
             <div className="relative z-10 w-full max-w-7xl h-full flex flex-col md:flex-row gap-8 items-stretch overflow-hidden">
@@ -122,14 +149,14 @@ export function CalendarSection() {
                             animate={{ opacity: 1, x: 0 }}
                             className="inline-flex items-center gap-2 px-4 py-1.5 bg-rose-50 border border-rose-100/50 rounded-full text-rose-500 text-[10px] font-black uppercase tracking-[0.2em]"
                         >
-                            <Sparkles className="w-3 h-3" />
+                            <CalendarHeart className="w-3 h-3" />
                             Our Journey
                         </motion.div>
-                        <h2 className="text-6xl xl:text-7xl font-serif text-stone-800 leading-[0.85] tracking-tight">
-                            Sweet <br /><span className="text-rose-500 italic font-light">History</span>
+                        <h2 className="text-7xl xl:text-8xl font-['Dancing_Script'] font-bold text-stone-800 leading-[0.85] tracking-tight drop-shadow-sm">
+                            Sweet <br /><span className="text-rose-500">History</span>
                         </h2>
-                        <p className="text-stone-400 text-base xl:text-lg font-serif italic leading-relaxed max-w-xs">
-                            Every date is a chapter, every moment is a heart-beat in our shared story.
+                        <p className="text-stone-500 text-lg font-['Patrick_Hand'] leading-relaxed max-w-xs pl-1 border-l-2 border-rose-200">
+                            Every date is a chapter, every moment is a heart-beat in our shared story...
                         </p>
                     </div>
 
@@ -153,6 +180,9 @@ export function CalendarSection() {
                                     </div>
                                     {editingEvent ? "Edit Our Memory" : "Save a Moment"}
                                 </DialogTitle>
+                                <DialogDescription className="text-stone-600">
+                                    {editingEvent ? "Update the details of this special memory" : "Create a new memory for our calendar"}
+                                </DialogDescription>
                             </DialogHeader>
                             <div className="space-y-6">
                                 <div className="space-y-3">
@@ -217,45 +247,47 @@ export function CalendarSection() {
                             className="p-0 select-none"
                             classNames={{
                                 month: "space-y-8 w-full relative",
-                                month_caption: "flex justify-center items-center h-12 mb-10 relative",
-                                caption_label: "text-3xl font-serif font-black text-stone-800 tracking-tighter italic text-center",
-                                nav: "pointer-events-none flex items-center justify-between absolute inset-x-0 top-[55%] -translate-y-1/2 z-50 px-2",
+                                month_caption: "flex justify-center items-center h-12 mb-6 relative",
+                                caption_label: "text-4xl font-['Dancing_Script'] font-bold text-stone-800 tracking-wide",
+                                nav: "absolute inset-0 flex items-center justify-between pointer-events-none z-20 px-1", // Container spans full width
                                 button_previous: cn(
-                                    "h-14 w-14 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-rose-500 pointer-events-auto z-50",
-                                    "hover:scale-125 active:scale-90 border-none shadow-none bg-transparent"
+                                    "h-10 w-10 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-stone-800 pointer-events-auto",
+                                    "hover:bg-white/80 hover:shadow-md active:scale-90 border border-transparent hover:border-stone-100"
                                 ),
                                 button_next: cn(
-                                    "h-14 w-14 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-rose-500 pointer-events-auto z-50",
-                                    "hover:scale-125 active:scale-90 border-none shadow-none bg-transparent"
+                                    "h-10 w-10 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-stone-800 pointer-events-auto",
+                                    "hover:bg-white/80 hover:shadow-md active:scale-90 border border-transparent hover:border-stone-100"
                                 ),
-                                month_grid: "w-full border-collapse",
-                                weekdays: "grid grid-cols-7 w-full mb-6",
-                                weekday: "text-stone-300 font-bold w-full text-[10px] uppercase tracking-[0.3em] text-center",
+                                month_grid: "w-full border-collapse relative z-10",
+                                weekdays: "grid grid-cols-7 w-full mb-4",
+                                weekday: "text-stone-300 font-serif italic text-[11px] font-bold uppercase tracking-widest text-center",
                                 week: "grid grid-cols-7 w-full mt-3",
-                                day: "relative p-0 text-center w-full flex items-center justify-center",
+                                day: "relative p-0 text-center w-full flex items-center justify-center aspect-square",
                                 day_button: cn(
-                                    "h-10 w-10 p-0 font-serif text-lg font-medium transition-all rounded-[14px] text-stone-600 flex items-center justify-center relative group/day hover:bg-rose-50 hover:text-rose-500"
+                                    "h-11 w-11 p-0 font-serif text-lg transition-all rounded-[18px] text-stone-600 flex items-center justify-center relative group/day",
+                                    "hover:bg-rose-50 hover:text-rose-500 hover:scale-105"
                                 ),
                                 selected: cn(
-                                    "bg-stone-900 !text-white shadow-[0_10px_25px_-5px_rgba(0,0,0,0.4)] scale-110 !rounded-[14px] z-10",
-                                    "after:absolute after:bottom-1.5 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:bg-white after:rounded-full"
+                                    "bg-stone-900 !text-white shadow-[0_10px_20px_-5px_rgba(28,25,23,0.3)] scale-110 !rounded-[18px] z-20 font-medium",
+                                    "hover:bg-stone-900 hover:text-white hover:scale-110", // Force override hover
+                                    "after:absolute after:bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-rose-200 after:rounded-full after:shadow-[0_0_8px_rgba(253,224,71,0.5)]"
                                 ),
-                                today: "text-rose-500 font-black after:absolute after:top-1.5 after:right-1.5 after:w-1.5 after:h-1.5 after:bg-rose-500 after:rounded-full",
-                                outside: "text-stone-100 opacity-20",
+                                today: "text-rose-500 font-bold bg-rose-50/50",
+                                outside: "text-stone-200 opacity-0 pointer-events-none", // Hide outside days for cleaner look
                                 disabled: "text-stone-100 opacity-20",
                                 hidden: "invisible",
                             }}
                             components={{
                                 Chevron: (props) => {
-                                    if (props.orientation === 'left') return <ChevronRight className="w-7 h-7 rotate-180" />;
-                                    return <ChevronRight className="w-7 h-7" />;
+                                    if (props.orientation === 'left') return <ChevronRight className="w-5 h-5 rotate-180 stroke-[2.5]" />;
+                                    return <ChevronRight className="w-5 h-5 stroke-[2.5]" />;
                                 }
                             }}
                             modifiers={{
                                 hasEvent: (date) => getEventsForDay(date).length > 0
                             }}
                             modifiersClassNames={{
-                                hasEvent: "after:absolute after:bottom-1.5 after:w-1.5 after:h-1.5 after:bg-rose-400 after:rounded-full"
+                                hasEvent: "before:absolute before:top-2 before:right-2 before:w-1.5 before:h-1.5 before:bg-rose-400 before:rounded-full before:animate-pulse"
                             }}
                         />
                     </motion.div>

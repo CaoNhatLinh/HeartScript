@@ -45,8 +45,13 @@ export const EnvelopeSparkle: React.FC<{ count?: number }> = ({ count = 60 }) =>
 
     useFrame((state) => {
         if (!ref.current || performanceLevel === 'low') return;
+        const geometry = ref.current.geometry as THREE.BufferGeometry;
+        const pos = geometry.attributes.position as THREE.BufferAttribute;
+
+        // GUARD: If position attribute is missing or empty, skip frame
+        if (!pos || !pos.array) return;
+
         const time = state.clock.elapsedTime;
-        const pos = (ref.current.geometry as THREE.BufferGeometry).attributes.position as THREE.BufferAttribute;
         for (let i = 0; i < effectiveCount; i++) {
             const ox = pos.getX(i);
             const oy = pos.getY(i);
