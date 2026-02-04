@@ -47,12 +47,8 @@ const ParticlesInner: React.FC<{ count?: number }> = ({ count = 50 }) => {
     // Dispose created texture on unmount to avoid GPU memory leaks
     React.useEffect(() => {
         return () => {
-            try {
-                texture && (texture as any).dispose && texture.dispose();
-            } catch (e) {
-                // swallow, but keep cleanup robust
-                // eslint-disable-next-line no-console
-                console.warn('Failed to dispose particles texture', e);
+            if (texture) {
+                texture.dispose();
             }
         };
     }, [texture]);
@@ -110,7 +106,6 @@ const ParticlesInner: React.FC<{ count?: number }> = ({ count = 50 }) => {
             }
         } catch (err) {
             // Prevent runtime exceptions from interfering with React hook flow
-            // eslint-disable-next-line no-console
             console.error('Particles frame error', err);
         }
     });
@@ -132,4 +127,4 @@ const ParticlesInner: React.FC<{ count?: number }> = ({ count = 50 }) => {
 };
 
 export const Particles = React.memo(ParticlesInner);
-(Particles as any).displayName = 'Particles';
+Particles.displayName = 'Particles';

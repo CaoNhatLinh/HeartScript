@@ -3,7 +3,7 @@
 import React, { useEffect } from 'react';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { VisualStoryScene } from '../3d/VisualStoryScene';
-import { EndingScene } from '../3d/EndingScene';
+
 
 export const SceneManager: React.FC = React.memo(() => {
     const currentScene = useExperienceStore((state) => state.currentScene);
@@ -46,11 +46,7 @@ export const SceneManager: React.FC = React.memo(() => {
 
     return (
         <group>
-            {currentScene === 'ending' ? (
-                <EndingScene />
-            ) : (
-                <VisualStoryScene />
-            )}
+            <VisualStoryScene />
         </group>
     );
 });
