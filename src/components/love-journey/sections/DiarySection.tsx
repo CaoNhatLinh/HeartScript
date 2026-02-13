@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useMemo, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { push, ref, set, update, query, limitToLast, orderByChild, serverTimestamp, onValue } from 'firebase/database';
+import { push, ref, set, update, query, limitToLast, orderByChild, serverTimestamp, onValue, DatabaseReference } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCollection } from '@/hooks/useCollection';
@@ -38,7 +38,7 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import { detectMood, MOODS, MoodType } from '@/lib/love-config';
-import { Sun, CloudRain, Heart as HeartIcon, Cloud as CloudIcon, Info } from 'lucide-react';
+import { Sun, CloudRain, Heart as HeartIcon, Cloud as CloudIcon } from 'lucide-react';
 
 const LetterSkeleton = () => (
     <div className="relative bg-[#fffbf0]/50 rounded-sm p-6 shadow-sm border border-[#f0ebe0] overflow-hidden animate-pulse">
