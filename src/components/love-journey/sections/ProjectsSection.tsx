@@ -175,6 +175,15 @@ export function ProjectsSection() {
         }
     };
 
+    const handleCancelSchedule = async (id: string) => {
+        try {
+            await update(ref(rtdb, `projects/${id}`), { unlockDate: null });
+        } catch (error) {
+            console.error("Cancel schedule failed:", error);
+            alert('Failed to cancel schedule');
+        }
+    };
+
     const handleCreate = async () => {
         if (!user) return;
         const newRef = push(ref(rtdb, 'projects'));
@@ -265,7 +274,7 @@ export function ProjectsSection() {
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
-                                                onClick={() => project.unlockDate ? handleScheduleSubmit() : setScheduleProject(project)}
+                                                onClick={() => project.unlockDate ? handleCancelSchedule(project.id!) : setScheduleProject(project)}
                                                 className="text-indigo-400 hover:text-indigo-300 hover:bg-indigo-900/20"
                                                 title={project.unlockDate ? "Cancel Schedule" : "Set Schedule"}
                                             >

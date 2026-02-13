@@ -69,7 +69,7 @@ export const useAudioStore = create<AudioState>((set, get) => ({
     currentTrackIndex: 0,
     currentTrack: audioConfig.tracks[0] as Track || null,
 
-    isPlaying: false,
+    isPlaying: true,
     currentTime: 0,
     duration: 0,
     volume: audioConfig.defaultVolume,

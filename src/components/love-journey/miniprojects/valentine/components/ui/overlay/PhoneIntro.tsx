@@ -3,17 +3,19 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Bell, Camera, Flashlight, ChevronLeft, Phone, Video,
+    Camera, Flashlight, ChevronLeft, Phone, Video,
     MoreHorizontal, Send, Heart, Smile, Image as ImageIcon,
     Mic, Plus, Gift
 } from 'lucide-react';
 import { useExperienceStore } from '../../../store/useExperienceStore';
+import { useAudioStore } from '../../../store/useAudioStore';
 
 /**
  * PhoneIntro - A magical iPhone mockup intro sequence
  */
 export const PhoneIntro: React.FC = () => {
     const { introPhase, setIntroPhase, valentinePhotos, setScene, setIsIntroStarting } = useExperienceStore();
+    const setIsPlaying = useAudioStore(s => s.setIsPlaying);
     const [passcode, setPasscode] = useState('');
     const [chatStep, setChatStep] = useState(0);
     const [currentTime, setCurrentTime] = useState(new Date());
@@ -54,6 +56,7 @@ export const PhoneIntro: React.FC = () => {
             const newPasscode = passcode + num;
             setPasscode(newPasscode);
             if (newPasscode === '0711') {
+                setIsPlaying(true);
                 setTimeout(() => setIntroPhase('phone-chat'), 500);
             } else if (newPasscode.length === 4) {
                 // Shake effect on wrong passcode
@@ -136,7 +139,10 @@ export const PhoneIntro: React.FC = () => {
                                 initial={{ y: 50, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.8 }}
-                                onClick={() => setIntroPhase('phone-passcode')}
+                                onClick={() => {
+                                    setIsPlaying(true);
+                                    setIntroPhase('phone-passcode');
+                                }}
                                 className="absolute bottom-40 left-4 right-4 bg-white/10 backdrop-blur-xl rounded-[28px] p-4 border border-white/20 shadow-2xl cursor-pointer pointer-events-auto"
                             >
                                 <div className="flex items-center gap-3">
@@ -291,6 +297,7 @@ export const PhoneIntro: React.FC = () => {
                                         whileHover={{ scale: 1.1, rotate: 5 }}
                                         whileTap={{ scale: 0.9 }}
                                         onClick={() => {
+                                            setIsPlaying(true);
                                             setIsExiting(true);
                                             setIsIntroStarting(true);
                                             setTimeout(() => {

@@ -61,15 +61,21 @@ export default function ValentineEntry() {
 
   const [dpr, setDpr] = useState<[number, number]>([1, 2]);
 
+  const isPlaying = useAudioStore((s) => s.isPlaying);
+  const setIsPlaying = useAudioStore((s) => s.setIsPlaying);
   const audioContext = useAudioStore((s) => s.audioContext);
 
   const handlePointerDown = useCallback(() => {
     if (audioContext && audioContext.state === 'suspended') {
       audioContext.resume();
     }
+    // Force play attempt on first interaction to satisfy browser policy
+    if (isPlaying) {
+      setIsPlaying(true);
+    }
     setIsAnimating(true);
     window.setTimeout(() => setIsAnimating(false), 1000);
-  }, [setIsAnimating, audioContext]);
+  }, [setIsAnimating, audioContext, isPlaying, setIsPlaying]);
 
   const setValentinePhotos = useExperienceStore(s => s.setValentinePhotos);
 
