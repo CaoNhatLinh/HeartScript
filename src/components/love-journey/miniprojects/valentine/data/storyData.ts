@@ -36,7 +36,7 @@ export const STORY_LINES: StoryLine[] = [
     {
         id: 'opening',
         text: "Có một món quà nhỏ...",
-        subText: "dành riêng cho người em thương",
+        subText: "dành riêng cho người anh thương",
         trigger: 'none',
         layout: 'top-center',
         emphasis: 'whisper',

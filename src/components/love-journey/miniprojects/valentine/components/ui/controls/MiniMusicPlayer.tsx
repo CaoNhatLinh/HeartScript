@@ -136,15 +136,13 @@ export const MiniMusicPlayer: React.FC = () => {
                                     <img
                                         src={currentTrack.avatar}
                                         alt={currentTrack.title}
-                                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${isPlaying ? 'animate-[spin_20s_linear_infinite]' : ''}`}
+                                        className={`absolute inset-0 w-full h-full object-cover transition-all duration-500 ${isPlaying ? 'animate-spin' : ''}`}
+                                        style={isPlaying ? { animationDuration: '12s', animationTimingFunction: 'linear' } : {}}
                                     />
                                 ) : (
                                     <div className="absolute inset-0 bg-gradient-to-br from-pink-400/80 to-rose-500/80" />
                                 )}
-                                <div className="absolute inset-0 bg-black/20 group-hover/play:bg-black/40 transition-colors" />
-                                <div className="relative z-10 text-white">
-                                    {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
-                                </div>
+                                {/* Keep as a button for ease of access, but without the overlay icons */}
                             </button>
                         </div>
 
@@ -167,6 +165,9 @@ export const MiniMusicPlayer: React.FC = () => {
                                 <>
                                     <button onClick={() => previousTrack()} className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
                                         <SkipBack size={14} />
+                                    </button>
+                                    <button onClick={handleTogglePlay} className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                        {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
                                     </button>
                                     <button onClick={() => nextTrack()} className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
                                         <SkipForward size={14} />

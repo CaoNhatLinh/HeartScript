@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useMemo, memo } from 'react';
+import { useState, useRef, useEffect, useMemo, memo, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { push, ref, set, update, query, limitToLast, orderByChild, serverTimestamp, onValue } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
@@ -38,7 +38,34 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Image from 'next/image';
 import { detectMood, MOODS, MoodType } from '@/lib/love-config';
-import { Sun, CloudRain, Heart as HeartIcon, Cloud as CloudIcon } from 'lucide-react';
+import { Sun, CloudRain, Heart as HeartIcon, Cloud as CloudIcon, Info } from 'lucide-react';
+
+const LetterSkeleton = () => (
+    <div className="relative bg-[#fffbf0]/50 rounded-sm p-6 shadow-sm border border-[#f0ebe0] overflow-hidden animate-pulse">
+        <div className="absolute inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none" />
+        <div className="relative z-10 flex flex-col h-full gap-4">
+            <div className="flex justify-between items-start">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-stone-200" />
+                    <div className="space-y-2">
+                        <div className="h-4 w-24 bg-stone-200 rounded" />
+                        <div className="h-3 w-16 bg-stone-100 rounded" />
+                    </div>
+                </div>
+                <div className="w-8 h-8 bg-stone-100 rounded" />
+            </div>
+            <div className="space-y-3 py-4">
+                <div className="h-4 w-full bg-stone-200 rounded" />
+                <div className="h-4 w-[90%] bg-stone-200 rounded" />
+                <div className="h-4 w-2/3 bg-stone-200 rounded" />
+            </div>
+            <div className="flex items-center justify-between mt-auto pt-3 border-t border-dashed border-stone-200">
+                <div className="h-4 w-16 bg-stone-100 rounded" />
+                <div className="h-4 w-20 bg-stone-100 rounded" />
+            </div>
+        </div>
+    </div>
+);
 
 const MoodAtmosphere = memo(({ mood }: { mood: MoodType }) => {
     // Love Particles (Memoized - stable random values via useMemo)
@@ -251,9 +278,43 @@ MoodAtmosphere.displayName = 'MoodAtmosphere';
 export function DiarySection() {
     const { user } = useAuthStore();
     const [limitCount, setLimitCount] = useState(20);
-    const { data: entries, loading } = useCollection<JournalEntry>('journal', (qRef) =>
+    const [hasMore, setHasMore] = useState(true);
+    const observerRef = useRef<HTMLDivElement>(null);
+
+    const queryFn = useCallback((qRef: DatabaseReference) =>
         query(qRef, orderByChild('createdAt'), limitToLast(limitCount))
-    );
+        , [limitCount]);
+
+    const { data: entries, loading } = useCollection<JournalEntry>('journal', queryFn);
+
+    // Track if we really have more data
+    useEffect(() => {
+        if (!loading) {
+            if (entries.length < limitCount) {
+                setHasMore(false);
+            } else {
+                setHasMore(true);
+            }
+        }
+    }, [entries, limitCount, loading]);
+
+    // Infinite Scroll Implementation
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !loading) {
+                    setLimitCount(prev => prev + 10);
+                }
+            },
+            { threshold: 0.1, rootMargin: '100px' }
+        );
+
+        if (observerRef.current) {
+            observer.observe(observerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, loading]);
     // Filter out deleted entries (both isDeleted flag and deletedAt timestamp) and reverse for latest first
     const displayedEntries = [...entries]
         .filter(entry => !entry.isDeleted && !entry.deletedAt)
@@ -969,21 +1030,23 @@ export function DiarySection() {
                             </div>
                         )}
 
-                        {/* Load More */}
-                        {!loading && displayedEntries.length > 0 && (
-                            <div className="pt-8 flex justify-center pb-20">
-                                <Button
-                                    variant="outline"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setLimitCount(prev => prev + 5);
-                                    }}
-                                    disabled={loading}
-                                    className="rounded-full border-stone-300 text-stone-500 hover:bg-white hover:border-rose-300 hover:text-rose-500 font-['Montserrat'] text-xs font-bold uppercase tracking-widest px-8 py-6 transition-all"
-                                >
-                                    {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <History className="w-4 h-4 mr-2" />}
-                                    Load Old Letters
-                                </Button>
+                        {/* Infinite Scroll Trigger & Skeleton Loaders */}
+                        {hasMore && (
+                            <div ref={observerRef} className="pt-8 pb-32">
+                                {loading && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
+                                        <LetterSkeleton />
+                                        <LetterSkeleton />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {!hasMore && displayedEntries.length > 0 && (
+                            <div className="py-12 text-center">
+                                <p className="font-['Dancing_Script'] text-2xl text-stone-400">
+                                    Hết mất rồi... Đây là lá thư đầu tiên của đôi mình đó! <Heart className="inline-block w-5 h-5 text-rose-400 fill-rose-400 ml-1" />
+                                </p>
                             </div>
                         )}
                     </div>

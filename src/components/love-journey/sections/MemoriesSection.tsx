@@ -9,10 +9,10 @@ import { Memory } from '@/types';
 import Masonry from 'react-masonry-css';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { ImagePlus, Loader2, Trash2, X, Upload, Plus, ChevronRight, Heart, PartyPopper, Sparkles } from 'lucide-react';
+import { ImagePlus, Loader2, X, Upload, Plus, ChevronRight, Heart, PartyPopper, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { MemoryCard } from './components/MemoryCard';
 import {
     Dialog,
     DialogContent,
@@ -37,7 +37,6 @@ export function MemoriesSection() {
     // Pre-compute particle animations to avoid hydration mismatch
     const particleAnimations = useMemo(() => {
         return Array.from({ length: 6 }, (_, i) => {
-            // Use deterministic values based on index
             const seed1 = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
             const seed2 = Math.sin(i * 93.9898 + 12.233) * 43758.5453;
             const seed3 = Math.sin(i * 45.9898 + 34.233) * 43758.5453;
@@ -115,7 +114,6 @@ export function MemoriesSection() {
                 }
             }
 
-            // Cleanup
             pendingFiles.forEach(item => URL.revokeObjectURL(item.preview));
             setPendingFiles([]);
             setIsAdding(false);
@@ -139,27 +137,24 @@ export function MemoriesSection() {
 
     return (
         <section className="h-screen w-screen flex flex-col relative overflow-hidden bg-[#fff0f5] snap-start shrink-0" suppressHydrationWarning>
-            {/* Load Fonts */}
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Patrick+Hand&family=Montserrat:wght@300;400;500&display=swap');
                 
                 .my-masonry-grid {
                     display: flex;
-                    margin-left: -30px; /* gutter size offset */
+                    margin-left: -30px;
                     width: auto;
                 }
                 .my-masonry-grid_column {
-                    padding-left: 30px; /* gutter size */
+                    padding-left: 30px;
                     background-clip: padding-box;
                 }
             `}</style>
 
-            {/* Soft Background */}
             <div className="absolute inset-0 opacity-[0.4] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
             <div className="absolute top-0 left-0 w-[600px] h-[600px] bg-rose-200/40 blur-[130px] rounded-full pointer-events-none mix-blend-multiply" />
             <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-200/40 blur-[130px] rounded-full pointer-events-none mix-blend-multiply" />
 
-            {/* Floating Particles Background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
                 {particleAnimations.map((anim, i) => (
                     <motion.div
@@ -181,10 +176,7 @@ export function MemoriesSection() {
                         <div className="flex items-center gap-3 mb-2">
                             <h2 className="text-6xl md:text-7xl font-['Dancing_Script'] font-bold text-rose-500 drop-shadow-sm flex items-center gap-4">
                                 Sweet Moments
-                                <motion.div
-                                    animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }}
-                                    transition={{ duration: 3, repeat: Infinity }}
-                                >
+                                <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity }}>
                                     <Sparkles className="w-8 h-8 text-yellow-400" />
                                 </motion.div>
                             </h2>
@@ -196,10 +188,7 @@ export function MemoriesSection() {
 
                     <Dialog open={isAdding} onOpenChange={setIsAdding}>
                         <DialogTrigger asChild>
-                            <Button
-                                variant="outline"
-                                className="bg-white/80 backdrop-blur-sm border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-full px-6 py-6 shadow-sm transition-all hover:-translate-y-1 font-['Montserrat'] font-bold text-xs uppercase tracking-widest"
-                            >
+                            <Button variant="outline" className="bg-white/80 backdrop-blur-sm border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-full px-6 py-6 shadow-sm transition-all hover:-translate-y-1 font-['Montserrat'] font-bold text-xs uppercase tracking-widest">
                                 <ImagePlus className="w-4 h-4 mr-2" />
                                 Add Memories
                             </Button>
@@ -217,10 +206,7 @@ export function MemoriesSection() {
 
                             <div className="flex-1 overflow-y-auto p-8 pt-4 min-h-[300px] custom-scrollbar relative z-10">
                                 {pendingFiles.length === 0 ? (
-                                    <div
-                                        onClick={() => fileInputRef.current?.click()}
-                                        className="h-full min-h-[300px] border-2 border-dashed border-rose-200 rounded-3xl flex flex-col items-center justify-center space-y-4 cursor-pointer hover:bg-rose-50/50 transition-colors group"
-                                    >
+                                    <div onClick={() => fileInputRef.current?.click()} className="h-full min-h-[300px] border-2 border-dashed border-rose-200 rounded-3xl flex flex-col items-center justify-center space-y-4 cursor-pointer hover:bg-rose-50/50 transition-colors group">
                                         <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-300 group-hover:scale-110 transition-transform shadow-sm">
                                             <Upload className="w-8 h-8" />
                                         </div>
@@ -233,42 +219,25 @@ export function MemoriesSection() {
                                                 <div className="relative w-full h-full rounded-lg overflow-hidden">
                                                     <Image src={item.preview} alt="preview" fill className="object-cover" />
                                                 </div>
-                                                <button
-                                                    onClick={() => removePending(i)}
-                                                    className="absolute -top-2 -right-2 p-1.5 bg-rose-500 rounded-full text-white shadow-lg hover:bg-rose-600 transition-all opacity-0 group-hover:opacity-100 scale-90 hover:scale-110 z-20"
-                                                >
+                                                <button onClick={() => removePending(i)} className="absolute -top-2 -right-2 p-1.5 bg-rose-500 rounded-full text-white shadow-lg hover:bg-rose-600 transition-all opacity-0 group-hover:opacity-100 scale-90 hover:scale-110 z-20">
                                                     <X className="w-3 h-3" />
                                                 </button>
                                             </div>
                                         ))}
-                                        <button
-                                            onClick={() => fileInputRef.current?.click()}
-                                            className="aspect-[3/4] border-2 border-dashed border-rose-200 rounded-xl flex flex-col items-center justify-center text-rose-300 hover:text-rose-500 hover:bg-rose-50/50 transition-all"
-                                        >
+                                        <button onClick={() => fileInputRef.current?.click()} className="aspect-[3/4] border-2 border-dashed border-rose-200 rounded-xl flex flex-col items-center justify-center text-rose-300 hover:text-rose-500 hover:bg-rose-50/50 transition-all">
                                             <Plus className="w-8 h-8" />
                                         </button>
                                     </div>
                                 )}
                             </div>
 
-                            <input
-                                type="file"
-                                multiple
-                                accept="image/*"
-                                className="hidden"
-                                ref={fileInputRef}
-                                onChange={handleFileSelect}
-                            />
+                            <input type="file" multiple accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
 
                             <div className="p-6 border-t border-stone-100 flex justify-between items-center bg-white/50 relative z-10">
                                 <p className="text-xs font-['Montserrat'] font-bold uppercase tracking-wider text-stone-400">{pendingFiles.length} photos selected</p>
                                 <div className="flex gap-3">
                                     <Button variant="ghost" className="text-stone-500 hover:text-stone-800 font-['Montserrat'] text-xs font-bold uppercase" onClick={() => { setPendingFiles([]); setIsAdding(false); }}>Cancel</Button>
-                                    <Button
-                                        disabled={pendingFiles.length === 0 || uploading}
-                                        onClick={handleUploadAll}
-                                        className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-2 rounded-xl shadow-lg shadow-rose-200 transition-all font-['Montserrat'] text-xs font-bold uppercase tracking-widest"
-                                    >
+                                    <Button disabled={pendingFiles.length === 0 || uploading} onClick={handleUploadAll} className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-2 rounded-xl shadow-lg shadow-rose-200 transition-all font-['Montserrat'] text-xs font-bold uppercase tracking-widest">
                                         {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verify & Upload"}
                                     </Button>
                                 </div>
@@ -293,74 +262,33 @@ export function MemoriesSection() {
                             <p>Chưa có kỷ niệm nào được lưu lại. Thêm ngay đi nè!</p>
                         </div>
                     ) : (
-                        <div className="h-full overflow-y-auto custom-scrollbar pr-4 pb-20 -mr-4">
+                        <div className="h-full w-full overflow-y-auto custom-scrollbar pr-4 pb-20 -mr-4">
                             <Masonry
                                 breakpointCols={{
-                                    default: 4,
+                                    default: 5,
+                                    1536: 4,
                                     1280: 3,
                                     1024: 2,
-                                    500: 1
+                                    640: 1
                                 }}
                                 className="my-masonry-grid"
                                 columnClassName="my-masonry-grid_column"
                             >
-                                {displayedMemories.map((memory, idx) => {
-                                    const rotateClass = idx % 2 === 0 ? 'rotate-1' : '-rotate-1';
-
-                                    return (
-                                        <motion.div
-                                            key={memory.id}
-                                            initial={{ opacity: 0, y: 50 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: idx * 0.1, duration: 0.5 }}
-                                            className={cn("mb-8 relative group", rotateClass)}
-                                            whileHover={{ scale: 1.02, rotate: 0, zIndex: 10 }}
-                                        >
-                                            <div className="bg-white p-3 pb-16 shadow-[0_8px_20px_-8px_rgba(0,0,0,0.15)] rounded-sm relative cursor-pointer border border-[#f0ebe0] overflow-hidden hover:shadow-2xl transition-all duration-300">
-                                                {/* Tape Decor */}
-                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-[#fdf6e3]/90 shadow-sm opacity-80 z-20 rotate-2 transform border-l border-r border-[#e6e2d1]/50 mix-blend-multiply" />
-
-                                                <div className="relative aspect-[3/4] overflow-hidden bg-stone-100 mb-4 rounded-sm filter brightness-[0.98] contrast-[0.95] group-hover:brightness-100 group-hover:contrast-100 transition-all duration-500">
-                                                    <Image
-                                                        src={memory.url}
-                                                        alt="Memory"
-                                                        fill
-                                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
-                                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                                                    />
-
-                                                    {/* Delete Overlay */}
-                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
-                                                        {user?.uid === memory.userId && (
-                                                            <button
-                                                                onClick={(e) => handleDelete(e, memory.id)}
-                                                                className="p-2 bg-white/80 backdrop-blur-sm hover:bg-red-500 hover:text-white rounded-full text-stone-500 transition-colors shadow-sm"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        )}
-                                                    </div>
-                                                </div>
-
-                                                <div className="text-center px-2">
-                                                    <p className="font-['Patrick_Hand'] text-xl text-stone-700 truncate group-hover:text-rose-500 transition-colors">
-                                                        {memory.name || "Our Memory"}
-                                                    </p>
-                                                    <p className="text-[9px] text-stone-400 font-['Montserrat'] font-bold uppercase tracking-widest mt-2 border-t border-dashed border-stone-100 pt-2 inline-block">
-                                                        {memory.createdAt ? format(new Date(memory.createdAt as unknown as number), 'MMM dd, yyyy') : 'Timeless'}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
+                                {displayedMemories.map((memory, idx) => (
+                                    <MemoryCard
+                                        key={memory.id}
+                                        memory={memory}
+                                        idx={idx}
+                                        userId={user?.uid}
+                                        onDelete={handleDelete}
+                                    />
+                                ))}
                             </Masonry>
                         </div>
                     )}
                 </div>
             </div>
 
-            {/* Right Side Exploration Hint */}
             <div className="absolute top-1/2 right-4 -translate-y-1/2 z-20">
                 <motion.button
                     initial={{ opacity: 0, x: 20 }}
@@ -377,16 +305,9 @@ export function MemoriesSection() {
                     <span className="text-[10px] font-black uppercase tracking-[0.4em] [writing-mode:vertical-lr] rotate-180 transition-colors">
                         See Our Future Plans
                     </span>
-
                     <div className="flex flex-col items-center gap-4">
                         <div className="w-px h-20 bg-gradient-to-b from-transparent via-stone-300 to-stone-300 group-hover:via-rose-300 transition-all" />
-                        <motion.div
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ x: { duration: 2, repeat: Infinity, ease: "easeInOut" } }}
-                            className="p-5 bg-white/40 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] group-hover:shadow-rose-100 group-hover:border-rose-100 transition-all"
-                        >
+                        <motion.div whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }} animate={{ x: [0, 5, 0] }} transition={{ x: { duration: 2, repeat: Infinity, ease: "easeInOut" } }} className="p-5 bg-white/40 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] group-hover:shadow-rose-100 group-hover:border-rose-100 transition-all">
                             <ChevronRight className="w-6 h-6 text-stone-400 group-hover:text-rose-500" />
                         </motion.div>
                         <div className="w-px h-20 bg-gradient-to-t from-transparent via-stone-300 to-stone-300 group-hover:via-rose-300 transition-all" />

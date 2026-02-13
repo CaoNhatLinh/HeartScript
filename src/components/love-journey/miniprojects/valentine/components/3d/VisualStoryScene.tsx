@@ -201,13 +201,34 @@ export const VisualStoryScene: React.FC = React.memo(() => {
                 <primitive object={mascotScene} />
             </group>
 
-            {/* 6. CANDLE SET */}
-            <group
-                position={[...modelTransforms.candles.position] as [number, number, number]}
-                rotation={[...modelTransforms.candles.rotation] as [number, number, number]}
-                scale={showCandles ? modelTransforms.candles.scale : 0}
-            >
-                <CandleSet />
+            {/* 6. CANDLE SETS - Distributed around the rose for ambient glow */}
+            <group scale={showCandles ? 1 : 0}>
+                {/* Center Right */}
+                <group
+                    position={[...modelTransforms.candles.position] as [number, number, number]}
+                    rotation={[...modelTransforms.candles.rotation] as [number, number, number]}
+                    scale={modelTransforms.candles.scale}
+                >
+                    <CandleSet active={showCandles} />
+                </group>
+
+                {/* Front Left */}
+                <group
+                    position={[-5.5, 0, 5.0]}
+                    rotation={[0, 0.5, 0]}
+                    scale={modelTransforms.candles.scale * 0.8}
+                >
+                    <CandleSet active={showCandles} />
+                </group>
+
+                {/* Back Center */}
+                <group
+                    position={[-3.7, 0, 1.8]}
+                    rotation={[0, -0.3, 0]}
+                    scale={modelTransforms.candles.scale * 0.9}
+                >
+                    <CandleSet active={showCandles} />
+                </group>
             </group>
 
             {/* 7. PETAL SCATTER */}

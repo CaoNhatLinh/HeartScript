@@ -140,12 +140,14 @@ export const PhoneIntro: React.FC = () => {
                                 className="absolute bottom-40 left-4 right-4 bg-white/10 backdrop-blur-xl rounded-[28px] p-4 border border-white/20 shadow-2xl cursor-pointer pointer-events-auto"
                             >
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg">
-                                        <Bell size={20} className="text-white fill-white" />
+                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0084FF] to-[#00C6FF] flex items-center justify-center shadow-lg">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                                            <path d="M12 2C6.47715 2 2 6.14585 2 11.257C2 14.1311 3.42459 16.7126 5.65476 18.375V22.257L9.3667 20.2458C10.2173 20.4816 11.0963 20.6 12 20.6C17.5228 20.6 22 16.4542 22 11.3430C22 6.23185 17.5228 2.08594 12 2.08594V2ZM12.75 14.257L10.5 11.857L6 14.257L10.875 9.15703L13.125 11.557L17.625 9.15703L12.75 14.257Z" />
+                                        </svg>
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-white font-semibold text-sm">Pig</span>
+                                            <span className="text-white font-semibold text-sm">pig link</span>
                                             <span className="text-white/50 text-xs">bây giờ</span>
                                         </div>
                                         <p className="text-white/90 text-[13px]">hello bé iu</p>
@@ -237,10 +239,10 @@ export const PhoneIntro: React.FC = () => {
                                 <div className="flex items-center gap-3">
                                     <ChevronLeft size={24} className="text-rose-500" />
                                     <div className="w-10 h-10 rounded-full bg-rose-200 overflow-hidden border-2 border-white shadow-sm">
-                                        <img src="/boyfriend.jpg" alt="Pig" className="w-full h-full object-cover" />
+                                        <img src="/boyfriend.jpg" alt="pig link" className="w-full h-full object-cover" />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-bold text-gray-800 leading-tight">Pig</h3>
+                                        <h3 className="text-sm font-bold text-gray-800 leading-tight">pig link</h3>
                                         <div className="flex items-center gap-1">
                                             <div className="w-2 h-2 rounded-full bg-green-500" />
                                             <span className="text-[10px] text-gray-400">Đang hoạt động</span>
