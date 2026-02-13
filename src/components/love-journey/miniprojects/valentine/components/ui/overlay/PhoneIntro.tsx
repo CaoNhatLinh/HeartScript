@@ -145,7 +145,7 @@ export const PhoneIntro: React.FC = () => {
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center justify-between">
-                                            <span className="text-white font-semibold text-sm">Anh iu ❤️</span>
+                                            <span className="text-white font-semibold text-sm">Pig</span>
                                             <span className="text-white/50 text-xs">bây giờ</span>
                                         </div>
                                         <p className="text-white/90 text-[13px]">hello bé iu</p>
@@ -237,10 +237,10 @@ export const PhoneIntro: React.FC = () => {
                                 <div className="flex items-center gap-3">
                                     <ChevronLeft size={24} className="text-rose-500" />
                                     <div className="w-10 h-10 rounded-full bg-rose-200 overflow-hidden border-2 border-white shadow-sm">
-                                        <img src={wallpaper} alt="" className="w-full h-full object-cover" />
+                                        <img src="/boyfriend.jpg" alt="Pig" className="w-full h-full object-cover" />
                                     </div>
                                     <div>
-                                        <h3 className="text-sm font-bold text-gray-800 leading-tight">Anh iu ❤️</h3>
+                                        <h3 className="text-sm font-bold text-gray-800 leading-tight">Pig</h3>
                                         <div className="flex items-center gap-1">
                                             <div className="w-2 h-2 rounded-full bg-green-500" />
                                             <span className="text-[10px] text-gray-400">Đang hoạt động</span>
