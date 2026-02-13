@@ -187,8 +187,6 @@ export const PhoneIntro: React.FC = () => {
                                 </motion.div>
 
                                 <h2 className="text-white text-xl font-medium mb-1">Nhập mật mã tình yêu</h2>
-                                <p className="text-white/50 text-sm mb-12">mật khẩu là: 0000</p>
-
                                 <div className="flex gap-4 mb-20">
                                     {[0, 1, 2, 3].map((i) => (
                                         <div
