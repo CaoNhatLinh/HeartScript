@@ -7,7 +7,18 @@ import { useFrame } from '@react-three/fiber';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
 const MemoryImage: React.FC<{ url: string; position: [number, number, number] }> = ({ url, position }) => {
-  const texture = useTexture(url);
+  const originalTexture = useTexture(url);
+
+  // Improve texture quality - prevent blurriness
+  const texture = React.useMemo(() => {
+    const t = originalTexture.clone();
+    t.minFilter = THREE.LinearMipmapLinearFilter;
+    t.magFilter = THREE.LinearFilter;
+    t.generateMipmaps = true;
+    t.colorSpace = THREE.SRGBColorSpace;
+    t.needsUpdate = true;
+    return t;
+  }, [originalTexture]);
 
   return (
     <mesh position={position}>
@@ -108,39 +119,6 @@ export const MemoryGroup: React.FC<{ visible: boolean; isFinalMode?: boolean }> 
         </group>
       ))}
 
-      {/* Final heart photo */}
-      <group position={[0, 0.5, 0.5]}>
-        <React.Suspense fallback={null}>
-          <FinalHeartPhoto visible={!!isFinalMode} url={IMAGE_URLS[0]} />
-        </React.Suspense>
-      </group>
-    </group>
-  );
-};
-
-const FinalHeartPhoto: React.FC<{ visible: boolean; url: string }> = ({ visible, url }) => {
-  const meshRef = useRef<THREE.Group>(null);
-  useFrame((_, delta) => {
-    if (!meshRef.current) return;
-    const targetScale = visible ? 1.2 : 0;
-    meshRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 2);
-    meshRef.current.position.y = Math.sin(performance.now() * 0.001) * 0.05;
-  });
-
-  return (
-    <group ref={meshRef} scale={0}>
-      <pointLight color="#ff4d6d" intensity={visible ? 1.5 : 0} distance={3} decay={2} />
-      <mesh position={[0, 0, -0.05]}>
-        <planeGeometry args={[2.4, 2.8]} />
-        <meshBasicMaterial color="#ffc0cb" />
-      </mesh>
-      <group>
-        <mesh position={[0, 0, -0.01]}>
-          <planeGeometry args={[1.2, 1.5]} />
-          <meshStandardMaterial color="#f0e6d2" roughness={0.8} metalness={0.1} />
-        </mesh>
-        <MemoryImage url={url} position={[0, 0.1, 0.01]} />
-      </group>
     </group>
   );
 };

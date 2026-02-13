@@ -16,7 +16,7 @@ export interface StoryLine {
     text: string;
     subText?: string;
     // Trigger điều kiện để chuyển sang step tiếp theo
-    trigger?: 'none' | 'bloom' | 'chocolate' | 'photo' | 'letter_open' | 'auto';
+    trigger?: 'none' | 'bloom' | 'chocolate' | 'photo' | 'letter_open' | 'auto' | 'after_letter' | 'after_chocolate';
     // Vị trí hiển thị
     layout: 'center' | 'top-left' | 'top-right' | 'bottom-right' | 'top-center' | 'bottom-center' | 'center-left' | 'bottom-left';
     // Phong cách hiển thị
@@ -25,6 +25,8 @@ export interface StoryLine {
     duration?: number;
     // Scene tương ứng (optional, để sync camera)
     scene?: 'prelude' | 'intro' | 'flower' | 'climax' | 'chocolate' | 'ending';
+    // Modal to show at this step
+    showModal?: 'memory' | 'promise';
 }
 
 export const STORY_LINES: StoryLine[] = [
@@ -57,7 +59,22 @@ export const STORY_LINES: StoryLine[] = [
     },
 
     // =====================================================
-    // STEP 2: Thư xuất hiện - Lời yêu thương
+    // STEP 2 (NEW): Kỷ niệm gặp nhau - Modal 1
+    // =====================================================
+    {
+        id: 'first_memory',
+        text: "Anh còn nhớ ngày đầu tiên...",
+        subText: "khi anh gặp em, mọi thứ thay đổi",
+        trigger: 'auto',
+        layout: 'center',
+        emphasis: 'normal',
+        duration: 4000,
+        scene: 'flower',
+        showModal: 'memory'
+    },
+
+    // =====================================================
+    // STEP 3: Thư xuất hiện - Lời yêu thương
     // =====================================================
     {
         id: 'letter_reveal',
@@ -70,22 +87,24 @@ export const STORY_LINES: StoryLine[] = [
         scene: 'flower'
     },
 
+
+
     // =====================================================
-    // STEP 3: Sau khi đọc thư - Chuẩn bị quà tiếp theo
+    // STEP 5: Chuẩn bị quà ngọt ngào
     // =====================================================
     {
-        id: 'after_letter',
+        id: 'sweet_transition',
         text: "Và còn một điều ngọt ngào...",
         subText: "anh muốn gửi tặng em",
         trigger: 'auto',
-        layout: 'center',
+        layout: 'top-center',
         emphasis: 'normal',
         duration: 4000,
         scene: 'climax'
     },
 
     // =====================================================
-    // STEP 4: Chocolate - Vị ngọt của tình yêu
+    // STEP 6: Chocolate - Vị ngọt của tình yêu
     // =====================================================
     {
         id: 'chocolate_love',
@@ -99,7 +118,22 @@ export const STORY_LINES: StoryLine[] = [
     },
 
     // =====================================================
-    // STEP 5: Kết thúc - Lời yêu thương cuối
+    // STEP 7 (NEW): Lời hứa tương lai - Modal 3
+    // =====================================================
+    {
+        id: 'promise',
+        text: "Em là điều tuyệt vời nhất...",
+        subText: "anh có một lời hứa dành cho em",
+        trigger: 'after_chocolate',
+        layout: 'center',
+        emphasis: 'grand',
+        duration: 4000,
+        scene: 'chocolate',
+        showModal: 'promise'
+    },
+
+    // =====================================================
+    // STEP 8: Kết thúc - Lời yêu thương cuối
     // =====================================================
     {
         id: 'finale',
@@ -154,3 +188,5 @@ export const getStoryIndexByScene = (scene: string): number => {
     const index = STORY_LINES.findIndex(line => line.scene === scene);
     return index >= 0 ? index : 0;
 };
+
+

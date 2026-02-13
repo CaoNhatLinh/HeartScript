@@ -79,7 +79,7 @@ export const FloatingWords: React.FC = () => {
                             duration: bubble.duration,
                             ease: "linear"
                         }}
-                        className="absolute font-serif font-bold whitespace-nowrap drop-shadow-md"
+                        className="absolute font-serif font-bold whitespace-nowrap select-none bg-transparent"
                         style={{
                             left: `${bubble.x}%`,
                             color: color,

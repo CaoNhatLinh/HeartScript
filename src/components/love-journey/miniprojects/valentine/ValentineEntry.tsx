@@ -1,210 +1,206 @@
 "use client";
 
-// React import and hooks below
+import React, { useState, useEffect, useCallback } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Analytics } from "@vercel/analytics/react"
 import { useExperienceStore } from './store/useExperienceStore';
+import { useAudioStore } from './store/useAudioStore';
+import { getValentineImages } from '@/app/actions/valentine';
 import { Environment } from '@react-three/drei';
 import { SceneManager } from './components/managers/SceneManager';
 import { RenderLoopActivator } from './components/managers/RenderLoopActivator';
 import { CameraManager } from './components/managers/CameraManager';
-import { AudioController } from './components/managers/AudioController';
 import { LayerManager } from './components/managers/LayerManager';
 import { TransitionController } from './components/managers/TransitionController';
-import { EffectComposer, Bloom, Vignette, Noise, DepthOfField, ChromaticAberration, BrightnessContrast, HueSaturation } from '@react-three/postprocessing';
-// Dynamic imports for optional/dev-only components
-// They are dynamically loaded at runtime to avoid compile-time dependency issues and to keep the tree-shakeable bundle small
-import React, { useEffect, useState } from 'react';
+import { IntroSequenceManager } from './components/managers/IntroSequenceManager';
+import { GlobalAudioElement } from './components/managers/GlobalAudioElement';
 import { BackgroundGradient } from './components/3d/assets/BackgroundGradient';
-import { LetterOverlay } from './components/ui/LetterOverlay';
-import { StoryOverlay } from './components/ui/StoryOverlay';
-import { DebugPanel } from './components/ui/DebugPanel';
+import { LetterOverlay } from './components/ui/overlay/LetterOverlay';
+import { StoryOverlay } from './components/ui/overlay/StoryOverlay';
+import { DebugPanel } from './components/ui/feedback/DebugPanel';
 import { Settings } from 'lucide-react';
-// import { MusicControl } from './components/ui/MusicControl';
-import { ScreenshotButton } from './components/ui/ScreenshotButton';
-import { FrameSelector } from './components/ui/FrameSelector';
-import { ScreenshotPreview } from './components/ui/ScreenshotPreview';
-import { MiniMusicPlayer } from './components/ui/MiniMusicPlayer';
-import { CameraOverlay } from './components/ui/CameraOverlay';
-import { FrameOverlay } from './components/ui/FrameOverlay';
-import { FpsCounter } from './components/ui/FpsCounter';
+import { ScreenshotButton } from './components/ui/controls/ScreenshotButton';
+import { FrameSelector } from './components/ui/controls/FrameSelector';
+import { ScreenshotPreview } from './components/ui/modals/ScreenshotPreview';
+import { MiniMusicPlayer } from './components/ui/controls/MiniMusicPlayer';
+import { CameraOverlay } from './components/ui/overlay/CameraOverlay';
+import { FrameOverlay } from './components/ui/overlay/FrameOverlay';
+import { FpsCounter } from './components/ui/feedback/FpsCounter';
 import { GiftRevealPrompt } from './components/ui/GiftRevealPrompt';
+import { SceneTransitionOverlay } from './components/ui/overlay/SceneTransitionOverlay';
+import { MemoryModal } from './components/ui/modals/MemoryModal';
+import { CursorSparkles } from './components/ui/overlay/CursorSparkles';
+import { StarDrawingOverlay } from './components/ui/overlay/StarDrawingOverlay';
+import { PhoneIntro } from './components/ui/overlay/PhoneIntro';
 
-import type { LayerParams, LayerKey } from './store/useExperienceStore';
-
-// Stable component for Post Processing effects
-const ComposerEffects: React.FC<{
-  layerParams: LayerParams;
-  activeLayers: Record<LayerKey, boolean>;
-  performanceLevel: string;
-  currentScene: string;
-  FilmGrainComponent: React.ComponentType | null;
-}> = React.memo(({ layerParams, activeLayers, performanceLevel, currentScene, FilmGrainComponent }) => {
-  return (
-    <>
-      <Bloom luminanceThreshold={0.7} mipmapBlur={false} intensity={layerParams.bloomIntensity * 0.4} radius={0.4} />
-      <Vignette eskil={false} offset={0.1} darkness={layerParams.vignetteDarkness} />
-
-      <BrightnessContrast brightness={layerParams.brightness ?? 0} contrast={layerParams.contrast ?? 0} />
-      <HueSaturation saturation={layerParams.saturation ?? 0} hue={0} />
-
-      {performanceLevel === 'high' && currentScene !== 'prelude' ? (
-        <>
-          <DepthOfField target={[0, 0, 0]} focalLength={0.02} bokehScale={layerParams.dofBokehScale * 0.3} height={480} />
-          <ChromaticAberration offset={[layerParams.chromaOffset * 0.2, layerParams.chromaOffset * 0.2]} />
-          <Noise opacity={activeLayers.filmGrain ? layerParams.filmGrainIntensity * 0.1 : 0.0} />
-        </>
-      ) : null}
-
-      {FilmGrainComponent && <FilmGrainComponent />}
-    </>
-  );
-});
-ComposerEffects.displayName = 'ComposerEffects';
+import { PromiseModal } from './components/ui/modals/PromiseModal';
+import { TimelineBar } from './components/ui/TimelineBar';
+import { ConfettiBurst } from './components/3d/ConfettiBurst';
+import { FireworksEffect } from './components/3d/FireworksEffect';
+import { ValentineErrorBoundary } from './components/ui/feedback/ValentineErrorBoundary';
 
 export default function ValentineEntry() {
-  const {
-    layerParams,
-  } = useExperienceStore();
+  // ALL hooks must be called unconditionally before any conditional return
+  const [isClient, setIsClient] = useState(false);
 
-  const activeLayers = useExperienceStore((state) => state.activeLayers);
-  const debugPanelVisible = useExperienceStore((state) => state.debugPanelVisible);
-  const toggleDebugPanel = useExperienceStore((state) => state.toggleDebugPanel);
-  const screenshotMode = useExperienceStore((state) => state.screenshotMode);
-  const capturedImage = useExperienceStore((state) => state.capturedImage);
-
-  // Use a simple started check based on scene
-  const currentScene = useExperienceStore((state) => state.currentScene);
-  const isStarted = currentScene !== 'prelude';
-
+  // Granular selectors
+  const envIntensity = useExperienceStore((s) => s.layerParams.envIntensity);
+  const envRotation = useExperienceStore((s) => s.layerParams.envRotation);
+  const ambientIntensity = useExperienceStore((s) => s.layerParams.ambientIntensity);
+  const debugPanelVisible = useExperienceStore((s) => s.debugPanelVisible);
+  const toggleDebugPanel = useExperienceStore((s) => s.toggleDebugPanel);
+  const screenshotMode = useExperienceStore((s) => s.screenshotMode);
+  const capturedImage = useExperienceStore((s) => s.capturedImage);
+  const currentScene = useExperienceStore((s) => s.currentScene);
   const performanceLevel = useExperienceStore((s) => s.performanceLevel);
   const setIsAnimating = useExperienceStore((s) => s.setIsAnimating);
 
-  const [FilmGrainComponent, setFilmGrainComponent] = useState<React.ComponentType | null>(null);
-  const [PerfOverlayComponent, setPerfOverlayComponent] = useState<React.ComponentType | null>(null);
+  const introPhase = useExperienceStore((s) => s.introPhase);
 
+  const isStarted = currentScene !== 'prelude';
+
+  const [dpr, setDpr] = useState<[number, number]>([1, 2]);
+
+  const audioContext = useAudioStore((s) => s.audioContext);
+
+  const handlePointerDown = useCallback(() => {
+    if (audioContext && audioContext.state === 'suspended') {
+      audioContext.resume();
+    }
+    setIsAnimating(true);
+    window.setTimeout(() => setIsAnimating(false), 1000);
+  }, [setIsAnimating, audioContext]);
+
+  const setValentinePhotos = useExperienceStore(s => s.setValentinePhotos);
+
+  // Client-side hydration check and data initialization
   useEffect(() => {
-    import('./components/3d/layers/FilmGrainPass').then((mod) => setFilmGrainComponent(() => mod.default)).catch(() => { });
-    import('./components/ui/PerfOverlay').then((mod) => setPerfOverlayComponent(() => mod.default)).catch(() => { });
-  }, []);
+    setIsClient(true); // eslint-disable-line
+    getValentineImages().then(setValentinePhotos);
+  }, [setValentinePhotos]);
+
+  // Set DPR based on device width (client-side only)
+  useEffect(() => {
+    if (!isClient) return;
+    const clientDpr: [number, number] = window.innerWidth < 768 ? [0.5, 1] : [1, 2];
+    setDpr(clientDpr); // eslint-disable-line
+  }, [isClient]);
+
+  // Loading state - rendered AFTER all hooks
+  if (!isClient) {
+    return (
+      <div className="fixed inset-0 w-full h-full bg-valentine-dark overflow-hidden flex items-center justify-center" suppressHydrationWarning>
+        <div className="text-white text-center" suppressHydrationWarning>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4" suppressHydrationWarning />
+          <p>Loading 3D Experience...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
-      <AudioController />
+
+      <GlobalAudioElement />
       <TransitionController />
       <Analytics />
-      <div className="fixed inset-0 w-full h-full bg-valentine-dark overflow-hidden">
-        <div className="absolute inset-0 z-0">
-          <Canvas
-            frameloop="always"
-            onPointerDown={() => { setIsAnimating(true); window.setTimeout(() => setIsAnimating(false), 1000); }}
-            shadows={performanceLevel !== 'low'} // DISABLE shadows purely on low-end
-            gl={{
-              antialias: false,
-              powerPreference: "high-performance",
-              stencil: false,
-              depth: true,
-              toneMappingExposure: 1.0
-            }}
-            dpr={1}
-          >
-            <color attach="background" args={['#120916']} />
-            <BackgroundGradient />
-
-            {/* The single authority for camera logic (Transitions + Interaction) */}
-            <CameraManager />
-            <RenderLoopActivator />
-
-            {/* Adjustable Environment & Lighting */}
-            <Environment
-              preset="sunset"
-              environmentIntensity={layerParams.envIntensity ?? 0.8}
-              environmentRotation={[0, layerParams.envRotation ?? 0, 0]}
-            />
-            {/* Main Light - Shadow limited by performance */}
-            <directionalLight
-              position={[5, 10, 5]}
-              intensity={(layerParams.envIntensity ?? 0.8) * 1.2}
-              castShadow={performanceLevel === 'high' && currentScene !== 'prelude'}
-              shadow-mapSize={performanceLevel === 'high' ? [512, 512] : [256, 256]}
-              shadow-bias={-0.004}
+      <div className="fixed inset-0 w-full h-full bg-valentine-dark overflow-hidden" suppressHydrationWarning>
+        <ValentineErrorBoundary area="Valentine 3D Canvas">
+          <div className="absolute inset-0 z-0">
+            <Canvas
+              frameloop="always"
+              onPointerDown={handlePointerDown}
+              shadows={performanceLevel !== 'low'}
+              gl={{
+                antialias: false,
+                powerPreference: "high-performance",
+                stencil: false,
+                depth: true,
+                toneMappingExposure: 1.0,
+                preserveDrawingBuffer: true // Prevent canvas clear during re-render
+              }}
+              dpr={dpr}
             >
-              {/* {performanceLevel === 'high' && currentScene !== 'prelude' && (
-                <orthographicCamera attach="shadow-camera" args={[-8, 8, 8, -8]} />
-              )} */}
-            </directionalLight>
+              <color attach="background" args={['#1a0e30']} />
+              <BackgroundGradient />
 
-            <ambientLight intensity={layerParams.ambientIntensity ?? 0.15} color="#F8C8DC" />
+              <CameraManager />
+              <RenderLoopActivator />
 
-            <SceneManager />
-            <LayerManager />
-
-            {/* Post-Processing Gates - drastically reduce passes */}
-            {/* <EffectComposer enableNormalPass={false} multisampling={0} enabled={performanceLevel !== 'low'}>
-              <ComposerEffects
-                layerParams={layerParams}
-                activeLayers={activeLayers}
-                performanceLevel={performanceLevel}
-                currentScene={currentScene}
-                FilmGrainComponent={FilmGrainComponent}
+              <Environment
+                preset="sunset"
+                environmentIntensity={envIntensity ?? 0.8}
+                environmentRotation={[0, envRotation ?? 0, 0]}
               />
-            </EffectComposer> */}
-          </Canvas>
-        </div>
+              <directionalLight
+                position={[5, 10, 5]}
+                intensity={(envIntensity ?? 0.8) * 1.2}
+                castShadow={performanceLevel === 'high' && currentScene !== 'prelude'}
+                shadow-mapSize={performanceLevel === 'high' ? [512, 512] : [256, 256]}
+                shadow-bias={-0.004}
+              />
 
-        <div className="absolute inset-0 z-10 pointer-events-none">
-          {/* Debug & Overlay Tools (Hidden during screenshot OR while viewing preview) */}
-          {!screenshotMode && !capturedImage && (
-            <>
-              <StoryOverlay />
-              <LetterOverlay />
-              {/* Screenshot Components - Top Left */}
-              {isStarted && (
-                <div className="absolute top-4 left-4 z-50 flex flex-col gap-4 items-start pointer-events-none">
-                  <div className="pointer-events-auto flex items-center gap-2">
-                    <ScreenshotButton />
-                    <FrameSelector />
+              <ambientLight intensity={ambientIntensity ?? 0.15} color="#F8C8DC" />
+
+              <SceneManager />
+              <IntroSequenceManager />
+              <LayerManager />
+              <ConfettiBurst />
+              <FireworksEffect />
+            </Canvas>
+          </div>
+
+          <PhoneIntro />
+
+          <div className="absolute inset-0 z-10 pointer-events-none">
+            {!screenshotMode && !capturedImage && introPhase === 'completed' && (
+              <>
+                <StoryOverlay />
+                <LetterOverlay />
+                <MemoryModal />
+
+                <PromiseModal />
+                {isStarted && (
+                  <div className="absolute top-2 sm:top-4 left-2 sm:left-4 z-50 flex flex-col gap-2 sm:gap-4 items-start pointer-events-none">
+                    <div className="pointer-events-auto flex items-center gap-1 sm:gap-2">
+                      <ScreenshotButton />
+                      <FrameSelector />
+                    </div>
                   </div>
+                )}
+
+                {isStarted && <FrameOverlay />}
+                {isStarted && <TimelineBar />}
+
+                <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 pointer-events-auto z-50">
+                  <button
+                    onClick={toggleDebugPanel}
+                    className="p-2 sm:p-3 bg-white/10 backdrop-blur-md rounded-full text-white/90 hover:bg-white/20 transition-all shadow-lg border border-white/10"
+                    title="Open Debug Panel"
+                    aria-label="Mở bảng điều khiển debug"
+                    aria-expanded={debugPanelVisible}
+                  >
+                    <Settings size={18} className="sm:w-6 sm:h-6" />
+                  </button>
                 </div>
-              )}
 
-              {/* Frame Preview Overlay */}
-              {isStarted && <FrameOverlay />}
+                {debugPanelVisible && <DebugPanel />}
 
-              {/* Debug Tools - Bottom Left & Overlay */}
-              <div className="absolute bottom-6 left-6 pointer-events-auto z-50">
-                <button
-                  onClick={toggleDebugPanel}
-                  className="p-3 bg-white/10 backdrop-blur-md rounded-full text-white/90 hover:bg-white/20 transition-all shadow-lg border border-white/10"
-                  title="Open Debug Panel"
-                >
-                  <Settings size={22} />
-                </button>
-              </div>
+                <MiniMusicPlayer />
+                {isStarted && <CameraOverlay />}
+                {isStarted && <GiftRevealPrompt />}
+                <CursorSparkles />
+                <StarDrawingOverlay />
+              </>
+            )}
 
-              {activeLayers?.filmGrain && debugPanelVisible && PerfOverlayComponent && <PerfOverlayComponent />}
-              {debugPanelVisible && <DebugPanel />}
-
-              {/* Music Player - Bottom Right - Compact version */}
-              {isStarted && <MiniMusicPlayer />}
-
-              {/* Camera Overlay - User's webcam with beauty filters */}
-              {isStarted && <CameraOverlay />}
-
-              {/* Gift Reveal Prompt - Clickot/pho để hiện mascto/chocolate lần lượt */}
-              {isStarted && <GiftRevealPrompt />}
-            </>
-          )}
-
-          {/* Screenshot Preview Modal (Highest Layer) */}
-          <ScreenshotPreview />
-
-          {/* FPS Counter - Top Right */}
-          <FpsCounter />
-        </div>
-      </div >
+            <ScreenshotPreview />
+            {/* <PhotoGalleryModal /> */}
+            <SceneTransitionOverlay />
+            <FpsCounter />
+          </div>
+        </ValentineErrorBoundary>
+      </div>
     </>
   );
 }
-
-

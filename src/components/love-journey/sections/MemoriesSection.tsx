@@ -1,18 +1,12 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { push, ref, set, remove, query, orderByChild, serverTimestamp } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useCollection } from '@/hooks/useCollection';
 import { Memory } from '@/types';
-import {
-    Carousel,
-    CarouselContent,
-    CarouselItem,
-    CarouselNext,
-    CarouselPrevious,
-} from "@/components/ui/carousel";
+import Masonry from 'react-masonry-css';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { ImagePlus, Loader2, Trash2, X, Upload, Plus, ChevronRight, Heart, PartyPopper, Sparkles } from 'lucide-react';
@@ -39,6 +33,37 @@ export function MemoriesSection() {
     const [isAdding, setIsAdding] = useState(false);
     const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string }[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    // Pre-compute particle animations to avoid hydration mismatch
+    const particleAnimations = useMemo(() => {
+        return Array.from({ length: 6 }, (_, i) => {
+            // Use deterministic values based on index
+            const seed1 = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+            const seed2 = Math.sin(i * 93.9898 + 12.233) * 43758.5453;
+            const seed3 = Math.sin(i * 45.9898 + 34.233) * 43758.5453;
+            const seed4 = Math.sin(i * 67.9898 + 56.233) * 43758.5453;
+            const random1 = seed1 - Math.floor(seed1);
+            const random2 = seed2 - Math.floor(seed2);
+            const random3 = seed3 - Math.floor(seed3);
+            const random4 = seed4 - Math.floor(seed4);
+
+            return {
+                initial: { opacity: 0, y: 100, x: random1 * 100 },
+                animate: {
+                    opacity: [0, 0.4, 0],
+                    y: -100,
+                    x: random2 * 100 - 50
+                },
+                transition: {
+                    duration: 10 + random3 * 10,
+                    repeat: Infinity,
+                    delay: random4 * 5,
+                    ease: "linear" as const
+                },
+                style: { left: `${random1 * 100}%` }
+            };
+        });
+    }, []);
 
     const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files) return;
@@ -117,6 +142,16 @@ export function MemoriesSection() {
             {/* Load Fonts */}
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Patrick+Hand&family=Montserrat:wght@300;400;500&display=swap');
+                
+                .my-masonry-grid {
+                    display: flex;
+                    margin-left: -30px; /* gutter size offset */
+                    width: auto;
+                }
+                .my-masonry-grid_column {
+                    padding-left: 30px; /* gutter size */
+                    background-clip: padding-box;
+                }
             `}</style>
 
             {/* Soft Background */}
@@ -126,23 +161,14 @@ export function MemoriesSection() {
 
             {/* Floating Particles Background */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                {[...Array(6)].map((_, i) => (
+                {particleAnimations.map((anim, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 100, x: Math.random() * 100 }}
-                        animate={{
-                            opacity: [0, 0.4, 0],
-                            y: -100,
-                            x: Math.random() * 100 - 50
-                        }}
-                        transition={{
-                            duration: 10 + Math.random() * 10,
-                            repeat: Infinity,
-                            delay: Math.random() * 5,
-                            ease: "linear"
-                        }}
+                        initial={anim.initial}
+                        animate={anim.animate}
+                        transition={anim.transition}
                         className="absolute bottom-0 text-rose-300"
-                        style={{ left: `${Math.random() * 100}%` }}
+                        style={anim.style}
                     >
                         <Heart className={cn("w-4 h-4 fill-rose-200", i % 2 === 0 ? "w-6 h-6" : "w-4 h-4")} />
                     </motion.div>
@@ -267,67 +293,69 @@ export function MemoriesSection() {
                             <p>Chưa có kỷ niệm nào được lưu lại. Thêm ngay đi nè!</p>
                         </div>
                     ) : (
-                        <Carousel className="w-full max-w-[95%] mx-auto" opts={{ align: "start", loop: true }}>
-                            <CarouselContent className="-ml-6 py-10">
+                        <div className="h-full overflow-y-auto custom-scrollbar pr-4 pb-20 -mr-4">
+                            <Masonry
+                                breakpointCols={{
+                                    default: 4,
+                                    1280: 3,
+                                    1024: 2,
+                                    500: 1
+                                }}
+                                className="my-masonry-grid"
+                                columnClassName="my-masonry-grid_column"
+                            >
                                 {displayedMemories.map((memory, idx) => {
-                                    // Randomize slight rotation for a natural "messy" look
-                                    const rotateClass = idx % 2 === 0 ? 'rotate-2' : '-rotate-2';
-                                    const yOffset = idx % 3 === 0 ? 'mt-8' : 'mt-0'; // Staggered height
+                                    const rotateClass = idx % 2 === 0 ? 'rotate-1' : '-rotate-1';
 
                                     return (
-                                        <CarouselItem key={memory.id} className="pl-8 md:basis-1/2 lg:basis-1/3 xl:basis-1/4 pt-8 pb-12">
-                                            <motion.div
-                                                className={cn("h-full select-none transform transition-all duration-500 ease-out", rotateClass, yOffset)}
-                                                whileHover={{ y: -20, rotate: 0, scale: 1.05, zIndex: 10 }}
-                                            >
-                                                <div className="bg-white p-4 pb-12 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.15)] rounded-sm relative group cursor-pointer border border-[#f0ebe0] overflow-hidden">
-                                                    {/* Tape */}
-                                                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 bg-[#fdf6e3]/90 shadow-sm opacity-90 z-20 -rotate-1 transform border-l border-r border-[#e6e2d1]/50 mix-blend-multiply" />
+                                        <motion.div
+                                            key={memory.id}
+                                            initial={{ opacity: 0, y: 50 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.1, duration: 0.5 }}
+                                            className={cn("mb-8 relative group", rotateClass)}
+                                            whileHover={{ scale: 1.02, rotate: 0, zIndex: 10 }}
+                                        >
+                                            <div className="bg-white p-3 pb-16 shadow-[0_8px_20px_-8px_rgba(0,0,0,0.15)] rounded-sm relative cursor-pointer border border-[#f0ebe0] overflow-hidden hover:shadow-2xl transition-all duration-300">
+                                                {/* Tape Decor */}
+                                                <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-16 h-6 bg-[#fdf6e3]/90 shadow-sm opacity-80 z-20 rotate-2 transform border-l border-r border-[#e6e2d1]/50 mix-blend-multiply" />
 
-                                                    {/* Glossy Overlay */}
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 pointer-events-none z-10 transition-opacity duration-700" />
+                                                <div className="relative aspect-[3/4] overflow-hidden bg-stone-100 mb-4 rounded-sm filter brightness-[0.98] contrast-[0.95] group-hover:brightness-100 group-hover:contrast-100 transition-all duration-500">
+                                                    <Image
+                                                        src={memory.url}
+                                                        alt="Memory"
+                                                        fill
+                                                        className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                                                    />
 
-                                                    <div className="aspect-[3/4] relative overflow-hidden bg-stone-100 mb-6 filter sepia-[0.2] contrast-[0.95] group-hover:sepia-0 group-hover:contrast-100 transition-all duration-700 rounded-sm border border-stone-100">
-                                                        <Image
-                                                            src={memory.url}
-                                                            alt="Memory"
-                                                            fill
-                                                            className="object-cover transition-transform duration-1000 group-hover:scale-110"
-                                                        />
-                                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center z-20">
-                                                            {user?.uid === memory.userId && (
-                                                                <button
-                                                                    onClick={(e) => handleDelete(e, memory.id)}
-                                                                    className="p-3 bg-white/20 backdrop-blur-md hover:bg-red-500 hover:text-white rounded-full text-white transition-all transform scale-0 group-hover:scale-100 duration-300 border border-white/50"
-                                                                >
-                                                                    <Trash2 className="w-5 h-5" />
-                                                                </button>
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="text-center px-1 relative">
-                                                        <p className="font-['Patrick_Hand'] text-2xl text-stone-600 truncate group-hover:text-rose-500 transition-colors leading-6">
-                                                            {memory.name || "Our Memory"}
-                                                        </p>
-                                                        <p className="text-[10px] text-stone-400 font-['Montserrat'] font-bold uppercase tracking-widest mt-2 border-t border-dashed border-stone-200 pt-2 inline-block px-4">
-                                                            {memory.createdAt ? format(new Date(memory.createdAt as unknown as number), 'MMMM dd, yyyy') : 'Timeless'}
-                                                        </p>
-
-                                                        {/* Cute decorative doodle or heart */}
-                                                        <div className="absolute -bottom-8 -right-4 opacity-0 group-hover:opacity-60 transition-opacity duration-500 rotate-12">
-                                                            <Heart className="w-8 h-8 text-rose-300 fill-rose-100" />
-                                                        </div>
+                                                    {/* Delete Overlay */}
+                                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-20">
+                                                        {user?.uid === memory.userId && (
+                                                            <button
+                                                                onClick={(e) => handleDelete(e, memory.id)}
+                                                                className="p-2 bg-white/80 backdrop-blur-sm hover:bg-red-500 hover:text-white rounded-full text-stone-500 transition-colors shadow-sm"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </div>
-                                            </motion.div>
-                                        </CarouselItem>
+
+                                                <div className="text-center px-2">
+                                                    <p className="font-['Patrick_Hand'] text-xl text-stone-700 truncate group-hover:text-rose-500 transition-colors">
+                                                        {memory.name || "Our Memory"}
+                                                    </p>
+                                                    <p className="text-[9px] text-stone-400 font-['Montserrat'] font-bold uppercase tracking-widest mt-2 border-t border-dashed border-stone-100 pt-2 inline-block">
+                                                        {memory.createdAt ? format(new Date(memory.createdAt as unknown as number), 'MMM dd, yyyy') : 'Timeless'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </motion.div>
                                     );
                                 })}
-                            </CarouselContent>
-                            <CarouselPrevious className="left-[-20px] bg-white/80 hover:bg-white text-stone-600 border-none shadow-lg h-12 w-12" />
-                            <CarouselNext className="right-[-20px] bg-white/80 hover:bg-white text-stone-600 border-none shadow-lg h-12 w-12" />
-                        </Carousel>
+                            </Masonry>
+                        </div>
                     )}
                 </div>
             </div>

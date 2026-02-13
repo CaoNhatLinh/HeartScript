@@ -16,10 +16,12 @@ const CAMERA_CONFIGS: Record<FocusTarget, { position: [number, number, number], 
     intro_start: { position: [-4.90, 9.92, 39.46], target: [-3.7, 1.8, 3.7] },
 
     envelope: { position: [5.0, 0.5, 6.0], target: [5.0, -0.5, 2.0] },
-    photo: { position: [1.1, 1.5, 4.0], target: [1.1, 1.5, 0] },
+    photo: { position: [1.5, 2.5, 5.5], target: [1.1, 1.5, 0] },
     // Chocolate/Mascot: Pull back camera to avoid being too close (Z=5 -> Z=8)
     chocolate: { position: [-5.0, 5.0, 9.0], target: [-5.0, 5.0, 0.3] },
-    center: { position: [0, 1.0, 16.0], target: [0, 0, 0] },
+    center: { position: [0, 3.0, 18.0], target: [0, 1.0, 0] },
+    // Next friend position: Pos: [2.13, 5.85, 23.44] | Dist: 24.27
+    next_friend: { position: [1.47, 3.25, 9.71], target: [0, 0, 0] },
 };
 
 export const CameraManager: React.FC = () => {

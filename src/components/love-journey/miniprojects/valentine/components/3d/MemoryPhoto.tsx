@@ -6,15 +6,6 @@ import { Image, Line } from '@react-three/drei';
 import * as THREE from 'three';
 import { useExperienceStore } from '../../store/useExperienceStore';
 
-// Next.js static asset paths
-const IMAGE_URLS = [
-    '/valentine/img/anh1.png',
-    '/valentine/img/anh2.png',
-    '/valentine/img/anh3.png',
-    '/valentine/img/anh4.png',
-    '/valentine/img/anh5.png',
-];
-
 interface MemoryPhotoParams {
     visible: boolean;
     isFinalMode?: boolean;
@@ -23,14 +14,14 @@ interface MemoryPhotoParams {
 export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode = false }) => {
     const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
     const performanceLevel = useExperienceStore((s) => s.performanceLevel);
+    const setGalleryOpen = useExperienceStore((s) => s.setGalleryOpen);
+    const valentinePhotos = useExperienceStore((s) => s.valentinePhotos);
 
-    // Dynamic Line Generation
-    // We use a ref to hold the line geometry to update it every frame
-    // Dynamic Line Generation
-    // We use a ref to hold the line geometry to update it every frame
+    const imageUrls = valentinePhotos.length > 0 ? valentinePhotos : [];
+    const count = imageUrls.length;
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const lineRef = useRef<any>(null);
-    const count = IMAGE_URLS.length;
 
     // Base positions (static X distribution)
     const basePositions = useMemo(() => {
@@ -43,12 +34,11 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
         return pos;
     }, [count]);
 
-    // Generate initial points for the line to avoid "Invalid typed array length" error
+    // Generate initial points for the line
     const initialPoints = useMemo(() => {
         const pts = [];
         for (let i = 0; i <= 30; i++) {
             const x = -6 + (12 * (i / 30));
-            // Curve match the wind formula base state (t=0)
             const y = 1.8 + Math.pow(x * 0.25, 2) + 0.6;
             const z = -0.5 + Math.pow(x * 0.1, 2);
             pts.push(new THREE.Vector3(x, y, z));
@@ -60,7 +50,6 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
         if (!visible || count === 0 || performanceLevel === 'low') return;
         const time = state.clock.elapsedTime;
 
-        // WIND FORMULA
         const getWindY = (x: number) => {
             const baseCurve = 1.8 + Math.pow(x * 0.25, 2);
             const wind = Math.sin(time * 0.8 + x * 0.5) * 0.15;
@@ -74,7 +63,6 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
             return baseCurve + wind;
         };
 
-        // Update Line Geometry
         if (lineRef.current && lineRef.current.geometry) {
             const flatPoints: number[] = [];
             for (let i = 0; i <= 30; i++) {
@@ -85,11 +73,10 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
         }
     });
 
-    if (!visible || IMAGE_URLS.length === 0) return null;
+    if (!visible || count === 0) return null;
 
     return (
         <group visible={visible}>
-            {/* The Connecting String */}
             <Line
                 ref={lineRef}
                 points={initialPoints}
@@ -98,7 +85,7 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
                 dashed={false}
             />
 
-            {IMAGE_URLS.map((url, i) => (
+            {imageUrls.map((url: string, i: number) => (
                 <SwayingPhotoFrame
                     key={i}
                     url={url}
@@ -106,19 +93,24 @@ export const MemoryPhoto: React.FC<MemoryPhotoParams> = ({ visible, isFinalMode 
                     index={i}
                     isFocused={focusedIndex === i}
                     isDimmed={focusedIndex !== null && focusedIndex !== i}
-                    onFocus={(idx) => setFocusedIndex(idx === focusedIndex ? null : idx)}
+                    onFocus={(idx) => {
+                        if (idx === focusedIndex) {
+                            setGalleryOpen(true, idx);
+                        } else {
+                            setFocusedIndex(idx === focusedIndex ? null : idx);
+                        }
+                    }}
                     performanceLevel={performanceLevel}
                 />
             ))}
 
             <group position={[0, 0.5, 0.5]}>
-                <FinalHeartPhoto visible={!!isFinalMode} url={IMAGE_URLS[0]} />
+                <FinalHeartPhoto visible={!!isFinalMode} url={imageUrls[0]} />
             </group>
         </group>
     );
 };
 
-// Wrapper to handle individual Sway
 const SwayingPhotoFrame: React.FC<{
     url: string;
     baseX: number;
@@ -135,19 +127,8 @@ const SwayingPhotoFrame: React.FC<{
     useFrame((state, delta) => {
         if (!groupRef.current) return;
 
-        // Skip heavy animation on low perf, unless focused!
-        if (performanceLevel === 'low' && !isFocused) {
-            // Static position fallback logic could go here if needed, but current setup assumes dynamic.
-            // If low perf, we might just set static position once.
-            // But 'delta' is still running.
-            // Let's just allow it for now but maybe SKIP wind calculations if strict?
-            // Actually, let's keep it simple: clamp FPS via frameloop in App.tsx mainly.
-            // But we can early return if specific thresholds.
-        }
-
         const time = state.clock.elapsedTime;
 
-        // Same Wind Formula to match String
         const getWindY = (x: number) => {
             const baseCurve = 1.8 + Math.pow(x * 0.25, 2);
             const wind = Math.sin(time * 0.8 + x * 0.5) * 0.15;
@@ -164,30 +145,23 @@ const SwayingPhotoFrame: React.FC<{
         const targetY = isFocused ? 0 : getWindY(baseX);
         const targetZ = isFocused ? 1.5 : getWindZ(baseX);
 
-        // Apply Position (Lerp for smoothness if focused, direct wind otherwise?)
-        // Direct wind is better for "sticking" to the string.
         if (isFocused) {
             groupRef.current.position.lerp(new THREE.Vector3(targetX, targetY, targetZ), delta * 4);
         } else {
-            // Apply wind position directly, but maybe lerp slightly to avoid jitter if fps low?
-            // Direct set is best for synch with line
             groupRef.current.position.set(targetX, targetY, targetZ);
         }
 
-        // Scale Logic
         let targetScale = isFocused ? 1.8 : 1.0;
         if (isDimmed) targetScale = 0.5;
         else if (hovered && !isFocused) targetScale = 1.15;
         scale.current = THREE.MathUtils.lerp(scale.current, targetScale, delta * 3);
         groupRef.current.scale.setScalar(scale.current);
 
-        // Rotation Logic
         if (!isFocused) {
-            // Sway rotation based on movement
-            const swayRot = Math.sin(time * 1.5 + baseX) * 0.1; // Pendulum effect
+            const swayRot = Math.sin(time * 1.5 + baseX) * 0.1;
             groupRef.current.rotation.z = swayRot;
             groupRef.current.rotation.y = Math.sin(time * 0.5) * 0.1;
-            groupRef.current.lookAt(0, 0, 8); // Look at camera roughly
+            groupRef.current.lookAt(0, 0, 8);
         } else {
             groupRef.current.rotation.set(0, 0, 0);
         }
@@ -214,7 +188,6 @@ const SwayingPhotoFrame: React.FC<{
     );
 }
 
-// Keep FinalHeartPhoto as is
 const FinalHeartPhoto: React.FC<{ visible: boolean; url: string }> = ({ visible, url }) => {
     const meshRef = useRef<THREE.Group>(null);
     const performanceLevel = useExperienceStore((s) => s.performanceLevel);

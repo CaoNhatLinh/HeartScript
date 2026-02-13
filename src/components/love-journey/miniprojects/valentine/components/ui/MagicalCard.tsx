@@ -117,10 +117,11 @@ export const MagicalCard: React.FC<MagicalCardProps> = ({
 
                         {/* Content */}
                         <div
-                            className={`relative text-white font-serif tracking-wide leading-relaxed ${getTextAlignment()}`}
+                            className={`relative text-white tracking-wide leading-relaxed ${getTextAlignment()}`}
                             style={{
                                 transform: "translateZ(30px)",
-                                textShadow: '0 1px 4px rgba(0,0,0,0.3)' // Softened shadow
+                                textShadow: '0 1px 4px rgba(0,0,0,0.3)',
+                                fontFamily: "var(--font-playfair), 'Playfair Display', serif"
                             }}
                         >
                             {/* Shimmering Text Effect */}
@@ -139,7 +140,10 @@ export const MagicalCard: React.FC<MagicalCardProps> = ({
                                     animate={{ opacity: 0.8, y: 0 }}
                                     transition={{ delay: 0.5, duration: 1 }}
                                     className="mt-3 font-extralight italic text-rose-100/70"
-                                    style={{ fontSize: '15px' }}
+                                    style={{
+                                        fontSize: '15px',
+                                        fontFamily: "var(--font-quicksand), 'Quicksand', sans-serif"
+                                    }}
                                 >
                                     {subText}
                                 </motion.p>

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 
 import { useExperienceStore } from '../../store/useExperienceStore';
+import { useAudioData } from '../../store/useAudioStore';
 import { useWind } from './layers/WindEffect';
 
 const ParticlesInner: React.FC<{ count?: number }> = ({ count = 50 }) => {
@@ -56,6 +57,7 @@ const ParticlesInner: React.FC<{ count?: number }> = ({ count = 50 }) => {
     const dummy = useMemo(() => new THREE.Object3D(), []);
     const activeStarfield = useExperienceStore((s) => s.activeLayers.starfield);
     const visible = !!(activeStarfield && performanceLevel !== 'low');
+    const readAudioData = useAudioData();
 
     useFrame((state) => {
         // Keep hooks order stable — bail out early but do not change hook usage
@@ -86,8 +88,9 @@ const ParticlesInner: React.FC<{ count?: number }> = ({ count = 50 }) => {
                     (my / 10) * b + zFactor + Math.cos((t / 10) * factor) + (Math.sin(t * 3) * factor) / 10 + windZ
                 );
 
-                // Scale pulsation
-                const scale = (s > 0.5 ? s : 0.5) * 0.1; // modest size
+                // Scale pulsation with high-frequency audio reactivity
+                const audioData = readAudioData();
+                const scale = (s > 0.5 ? s : 0.5) * 0.1 * (1 + audioData.high * 0.2);
                 dummy.scale.set(scale, scale, scale);
 
                 dummy.rotation.set(s * 5, s * 5, s * 5);

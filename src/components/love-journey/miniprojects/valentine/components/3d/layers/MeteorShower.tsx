@@ -1,4 +1,4 @@
-import React, { useRef, useLayoutEffect, useMemo } from 'react';
+import React, { useRef, useLayoutEffect, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useExperienceStore } from '../../../store/useExperienceStore';
@@ -17,8 +17,8 @@ export const MeteorShower: React.FC<{ speed?: number }> = ({ speed }) => {
     // Meteors state ref
     const meteorsRef = useRef<{ pos: THREE.Vector3; vel: THREE.Vector3; scale: number }[]>([]);
 
-    // FIX: Use useMemo for immediate initialization (avoids empty frames logic)
-    useMemo(() => {
+    // Initialize meteors once on mount
+    useEffect(() => {
         const arr: { pos: THREE.Vector3; vel: THREE.Vector3; scale: number }[] = [];
         // Fixed angle for uniform direction (Restored logic)
         const angle = angleRef;

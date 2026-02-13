@@ -34,7 +34,7 @@ export const SceneEffects: React.FC = () => {
             <directionalLight
                 ref={lightRef}
                 position={[5, sunY, sunZ]} // Lệch sang phải 5 đơn vị
-                intensity={params.sunsetIntensity * 2.5}
+                intensity={params.sunsetIntensity * 1.8}
                 color={sunColor}
                 castShadow
                 shadow-bias={-0.0005}
@@ -47,7 +47,7 @@ export const SceneEffects: React.FC = () => {
             />
 
             {/* Fog để tạo depth cho sunset atmosphere */}
-            <fog attach="fog" args={[bgConfig?.gradientMid || '#2d1b4e', 5, 25]} />
+            <fog attach="fog" args={[bgConfig?.gradientMid || '#2d1b4e', 10, 300]} />
         </>
     );
 };

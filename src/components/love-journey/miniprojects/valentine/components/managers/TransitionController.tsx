@@ -18,6 +18,7 @@ export const TransitionController: React.FC = () => {
     const hasReadLetter = useExperienceStore((s) => s.hasReadLetter);
     const bloomProgress = useExperienceStore((s) => s.bloomProgress);
     const setIsAnimating = useExperienceStore((s) => s.setIsAnimating);
+    const setTransitionState = useExperienceStore((s) => s.setTransitionState);
 
     // Initial audio unlock listener
     useEffect(() => {
@@ -39,40 +40,58 @@ export const TransitionController: React.FC = () => {
         }
     }, [bloomProgress, hasReadLetter, setFocusTarget, currentScene]);
 
-    // 2. SCENE TRANSITION LOGIC - Optimized to reduce jank
+    // 2. SCENE TRANSITION LOGIC - With fade overlay
     useEffect(() => {
         if (!pendingTransition) return;
         const { scene } = pendingTransition;
 
-        // Use requestIdleCallback or setTimeout to defer heavy work
         const startTransition = () => {
-            const timeline = gsap.timeline({ defaults: { ease: 'power2.inOut' } });
-
-            // Activate continuous rendering during transitions
             setIsAnimating(true);
 
-            // Small delay to let React finish rendering UI changes first
-            timeline.to({}, { duration: 0.15 });
-            timeline.add(() => setScene(scene));
-
-            if (scene === 'flower') {
-                // Smoother bloom animation with lower tension
-                timeline.to({ b: 0 }, {
-                    duration: 2.0, // Slower, smoother
-                    b: 1,
-                    ease: 'power1.inOut',
-                    onUpdate() { setBloomProgress(this.targets()[0].b); }
-                });
+            // Phase 1: Subtle transition cue (skip for flower scene to avoid flash)
+            if (scene !== 'flower') {
+                setTransitionState('fading-out');
             }
 
-            timeline.eventCallback('onComplete', () => {
-                clearPendingTransition();
-                setIsAnimating(false);
-            });
-            timeline.eventCallback('onInterrupt', () => { setIsAnimating(false); });
+            setTimeout(() => {
+                // Phase 2: Switch scene seamlessly
+                const timeline = gsap.timeline({ defaults: { ease: 'power2.inOut' } });
+
+                timeline.add(() => {
+                    setScene(scene);
+                    if (scene === 'ending') {
+                        useExperienceStore.getState().triggerConfetti();
+                    }
+                });
+
+                if (scene === 'flower') {
+                    timeline.to({ b: 0 }, {
+                        duration: 0.8, // Giảm từ 2.0s xuống 0.8s
+                        b: 1,
+                        ease: 'power1.inOut',
+                        onUpdate() { setBloomProgress(this.targets()[0].b); }
+                    });
+                }
+
+                // Phase 3: Complete transition (skip for flower scene)
+                if (scene !== 'flower') {
+                    timeline.add(() => setTransitionState('fading-in'));
+                }
+
+                timeline.eventCallback('onComplete', () => {
+                    clearPendingTransition();
+                    setIsAnimating(false);
+                    if (scene !== 'flower') {
+                        setTimeout(() => setTransitionState('idle'), 400);
+                    }
+                });
+                timeline.eventCallback('onInterrupt', () => {
+                    setIsAnimating(false);
+                    setTransitionState('idle');
+                });
+            }, scene === 'flower' ? 50 : 200); // Faster for flower scene
         };
 
-        // Defer to next idle period or use setTimeout as fallback
         if ('requestIdleCallback' in window) {
             (window as Window).requestIdleCallback(startTransition, { timeout: 100 });
         } else {
@@ -82,7 +101,7 @@ export const TransitionController: React.FC = () => {
         return () => {
             setIsAnimating(false);
         };
-    }, [pendingTransition, clearPendingTransition, setScene, setBloomProgress, setIsAnimating]);
+    }, [pendingTransition, clearPendingTransition, setScene, setBloomProgress, setIsAnimating, setTransitionState]);
 
     // 3. STORY STEP TRIGGERS
     useEffect(() => {

@@ -1,49 +1,84 @@
 {
-    "version": 1,
+    "version": 2,
     "defaultVolume": 0.5,
     "autoplay": true,
     "shuffle": false,
     "repeat": "all",
+    "fadeInDuration": 2000,
+    "fadeOutDuration": 1500,
+    "crossfadeDuration": 3000,
     "tracks": [
         {
-            "id": "track-1",
-            "title": "Perfect",
-            "artist": "Ed Sheeran",
-            "duration": 263,
-            "avatar": "/audio/covers/perfect.jpg",
-            "src": "/audio/tracks/perfect.mp3"
+            "id": "v-track-noi-nay-co-anh",
+            "title": "Nơi Này Có Anh",
+            "artist": "Sơn Tùng M-TP",
+            "duration": 260,
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/c/0/2/3/c023530be6281896752763f0d55e054f.jpg",
+            "genre": "Pop",
+            "src": "/valentine/audio/Nơi Này Có Anh.mp3"
         },
         {
-            "id": "track-2",
-            "title": "All of Me",
-            "artist": "John Legend",
-            "duration": 269,
-            "avatar": "/audio/covers/all-of-me.jpg",
-            "src": "/audio/tracks/all-of-me.mp3"
-        },
-        {
-            "id": "track-3",
-            "title": "A Thousand Years",
-            "artist": "Christina Perri",
-            "duration": 285,
-            "avatar": "/audio/covers/a-thousand-years.jpg",
-            "src": "/audio/tracks/a-thousand-years.mp3"
-        },
-        {
-            "id": "track-4",
-            "title": "Can't Help Falling in Love",
-            "artist": "Elvis Presley",
+            "id": "v-track-1000-anh-mat",
+            "title": "1000 Ánh Mắt",
+            "artist": "Shiki",
             "duration": 180,
-            "avatar": "/audio/covers/cant-help-falling.jpg",
-            "src": "/audio/tracks/cant-help-falling.mp3"
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/0/b/4/f/0b4f3b6014e768e7af550993f8863f6a.jpg",
+            "genre": "Pop / Cute",
+            "src": "/valentine/audio/1000 Ánh Mắt Shiki.mp3"
         },
         {
-            "id": "track-5",
-            "title": "Thinking Out Loud",
-            "artist": "Ed Sheeran",
-            "duration": 281,
-            "avatar": "/audio/covers/thinking-out-loud.jpg",
-            "src": "/audio/tracks/thinking-out-loud.mp3"
+            "id": "v-track-yeu-anh-em-nhe",
+            "title": "Yêu Anh Em Nhé",
+            "artist": "HuyR",
+            "duration": 210,
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/5/2/c/3/52c3886f6a798f090d8109d9482f7e02.jpg",
+            "genre": "Pop / Happy",
+            "src": "/valentine/audio/Yêu Anh Em Nhé.mp3"
+        },
+        {
+            "id": "v-track-hon-ca-yeu",
+            "title": "Hơn Cả Yêu",
+            "artist": "Đức Phúc",
+            "duration": 245,
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/a/9/e/d/a9ed142c215560ab45f6b2b433907f90.jpg",
+            "genre": "Pop / Romance",
+            "src": "/valentine/audio/Hơn Cả Yêu - Đức Phúc.mp3"
+        },
+        {
+            "id": "v-track-cham-hoa",
+            "title": "Chăm Hoa",
+            "artist": "MONO",
+            "duration": 195,
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/c/b/a/0/cba0f4882194605963286e92751f7b8d.jpg",
+            "genre": "Pop / Bright",
+            "src": "/valentine/audio/MONO - Chăm Hoa.mp3"
+        },
+        {
+            "id": "v-track-anh-nha-o-dau-the",
+            "title": "Anh Nhà Ở Đâu Thế",
+            "artist": "AMEE X B RAY (Masew Remix)",
+            "duration": 220,
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/a/d/8/3/ad83ac935fcc6368d1f7c04107567794.jpg",
+            "genre": "Pop / Remix",
+            "src": "/valentine/audio/Anh Nhà Ở Đâu Thế - AMEE X B RAY ( Masew Remix ).mp3"
+        },
+        {
+            "id": "v-track-em-dong-y",
+            "title": "Em Đồng Ý (I Do)",
+            "artist": "Đức Phúc x 911",
+            "duration": 235,
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/d/d/e/4/dde49352e8548984920bffa5fb70c0c7.jpg",
+            "genre": "Pop / Wedding",
+            "src": "/valentine/audio/Em Đồng Ý - I Do - - Đức Phúc X 911 [Lyrics Video] Điều Anh Ước Muốn Bây Giờ Ngay Đây Rồi.mp3"
+        },
+        {
+            "id": "v-track-duong-quyen-tinh-yeu",
+            "title": "ĐƯỜNG QUYỀN TÌNH YÊU",
+            "artist": "Đạt Ka",
+            "duration": 200,
+            "avatar": "https://photo-resize-zmp3.zmdcdn.me/w600_r1x1_jpeg/cover/7/2/a/1/72a188f638f2197eb098a363967739fc.jpg",
+            "genre": "Pop / Fun",
+            "src": "/valentine/audio/ĐƯỜNG QUYỀN TÌNH YÊU.mp3"
         }
     ]
 }

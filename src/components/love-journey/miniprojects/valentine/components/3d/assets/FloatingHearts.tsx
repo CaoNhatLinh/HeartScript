@@ -2,6 +2,7 @@ import React, { useRef, useMemo } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { useExperienceStore } from '../../../store/useExperienceStore';
+import { useAudioData } from '../../../store/useAudioStore';
 
 // Tạo hình trái tim
 const createHeartShape = () => {
@@ -52,6 +53,8 @@ export const FloatingHearts: React.FC<{ count?: number, range?: number }> = ({ c
 
     const effectiveCount = layerParams.heartCount ?? count;
     const effectiveSpeed = layerParams.heartSpeed ?? 1.0;
+    const effectiveScale = layerParams.heartScale ?? 1.0;
+    const readAudioData = useAudioData();
 
     // Tạo particles với seeded random
     const { particles, countsByType } = useMemo(() => {
@@ -83,7 +86,7 @@ export const FloatingHearts: React.FC<{ count?: number, range?: number }> = ({ c
                 speed: 0.002 + seededRandom(seed + 7) * 0.012,
                 // CHAOTIC ROTATION: Faster and unpredictable
                 rotationSpeed: (seededRandom(seed + 8) - 0.5) * 0.03,
-                scale: 0.05 + seededRandom(seed + 9) * 0.12,
+                scale: (0.05 + seededRandom(seed + 9) * 0.12) * effectiveScale,
                 shimmerPhase: seededRandom(seed + 10) * Math.PI * 2,
                 materialType: matType,
                 indexInType,
@@ -94,7 +97,7 @@ export const FloatingHearts: React.FC<{ count?: number, range?: number }> = ({ c
         });
 
         return { particles: pts, countsByType: counts };
-    }, [effectiveCount, range]);
+    }, [effectiveCount, range, effectiveScale]);
 
     // Geometry với bevel đẹp hơn
     const geometry = useMemo(() => {
@@ -149,7 +152,12 @@ export const FloatingHearts: React.FC<{ count?: number, range?: number }> = ({ c
         if (frameCount.current % skipFrames !== 0) return;
 
         const time = state.clock.elapsedTime;
-        const speedMultiplier = delta * 60 * effectiveSpeed;
+        const audioData = readAudioData();
+        const speedMultiplier = delta * 60 * effectiveSpeed * (1 + audioData.mid * 0.5);
+
+        // AUDIO REACTIVE PILSE
+        // Bass (low) influences scale pulse
+        const pulse = 1 + audioData.bass * 0.4;
         const windIntensity = (layerParams.windIntensity ?? 0.5) * 0.03;
 
         // Map mesh refs
@@ -190,9 +198,9 @@ export const FloatingHearts: React.FC<{ count?: number, range?: number }> = ({ c
             dummy.position.set(particle.position[0], particle.position[1], particle.position[2]);
             dummy.rotation.set(particle.rotation[0], particle.rotation[1], particle.rotation[2]);
 
-            // Shimmer scale effect
+            // Shimmer scale effect + AUDIO PULSE
             const shimmer = 1 + Math.sin(time * 2.5 + particle.shimmerPhase) * 0.15;
-            const finalScale = particle.scale * shimmer;
+            const finalScale = particle.scale * shimmer * pulse;
             dummy.scale.set(finalScale, finalScale, finalScale);
 
             dummy.updateMatrix();

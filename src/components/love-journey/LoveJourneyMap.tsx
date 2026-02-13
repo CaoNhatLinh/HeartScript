@@ -30,6 +30,14 @@ import Image from 'next/image';
 
 const COUPLE_AVATAR = "/couple-art.png";
 
+const SECTION_THEMES = [
+    { from: 'from-neutral-900/0', to: 'to-mid-900/0' }, // Home
+    { from: 'from-rose-200/20', to: 'to-orange-100/20' }, // Journal
+    { from: 'from-purple-200/20', to: 'to-pink-100/20' }, // Memories
+    { from: 'from-blue-200/20', to: 'to-cyan-100/20' }, // Plans
+    { from: 'from-indigo-200/20', to: 'to-violet-100/20' }, // Projects
+];
+
 export default function LoveJourneyMap() {
     const { user, setUser } = useAuthStore();
     const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -127,6 +135,15 @@ export default function LoveJourneyMap() {
                     suppressHydrationWarning
                 />
             </div>
+
+            {/* Ambient Atmosphere Overlay */}
+            <motion.div
+                animate={{
+                    background: `linear-gradient(to bottom, transparent, ${SECTION_THEMES[activeIndex]?.from.replace('from-', '') || 'transparent'})`
+                }}
+                transition={{ duration: 1 }}
+                className="absolute inset-0 z-[55] pointer-events-none opacity-50 mix-blend-overlay"
+            />
 
             {/* Horizontal Scroll Container */}
             <div
@@ -308,42 +325,55 @@ export default function LoveJourneyMap() {
                 </div>
             </div>
 
-            {/* Navigation Dock */}
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
-                <div className="flex items-center gap-2 px-4 py-3 bg-black/40 backdrop-blur-xl border border-white/10 rounded-full shadow-2xl transition-all duration-300 hover:bg-black/60 hover:scale-105">
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50">
+                <motion.div
+                    initial={{ y: 100, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
+                    className="flex items-center gap-3 px-3 py-3 bg-black/20 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/30 transition-colors"
+                >
                     {navItems.map((item, index) => {
                         const Icon = item.icon;
                         const isActive = activeIndex === index;
                         return (
-                            <button
-                                key={index}
-                                onClick={() => scrollToSection(index)}
-                                className={cn(
-                                    "relative p-3 rounded-full transition-all duration-300 group",
-                                    isActive ? "bg-white/10 text-white shadow-lg scale-110" : "text-white/50 hover:text-white hover:bg-white/5"
-                                )}
-                            >
-                                <Icon className={cn("w-5 h-5", isActive && "stroke-[2.5px]")} />
+                            <div key={index} className="relative group">
+                                <button
+                                    onClick={() => scrollToSection(index)}
+                                    className={cn(
+                                        "relative p-3 rounded-full transition-all duration-500 ease-out z-10",
+                                        isActive ? "text-white" : "text-white/40 hover:text-white"
+                                    )}
+                                >
+                                    <div className={cn(
+                                        "absolute inset-0 bg-white/10 rounded-full scale-0 transition-transform duration-300 group-hover:scale-100",
+                                        isActive && "scale-100 bg-white/20"
+                                    )} />
 
-                                {/* Tooltip */}
+                                    <Icon className={cn(
+                                        "w-5 h-5 transition-transform duration-300",
+                                        isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110"
+                                    )} />
+                                </button>
+
+                                {/* Floating Label */}
                                 <span className={cn(
-                                    "absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 bg-black/80 text-white text-[10px] rounded opacity-0 transition-opacity whitespace-nowrap pointer-events-none",
-                                    "group-hover:opacity-100"
+                                    "absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider rounded-lg opacity-0 transform translate-y-2 transition-all duration-300 pointer-events-none border border-white/5",
+                                    "group-hover:opacity-100 group-hover:translate-y-0"
                                 )}>
                                     {item.label}
                                 </span>
 
-                                {/* Active Indicator Dot */}
+                                {/* Active Glow */}
                                 {isActive && (
                                     <motion.div
-                                        layoutId="active-nav-dot"
-                                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-white rounded-full"
+                                        layoutId="active-glow"
+                                        className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-white/50 blur-md rounded-full"
                                     />
                                 )}
-                            </button>
+                            </div>
                         );
                     })}
-                </div>
+                </motion.div>
             </div>
         </div>
     );

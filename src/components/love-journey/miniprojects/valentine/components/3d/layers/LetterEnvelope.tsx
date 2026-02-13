@@ -11,6 +11,45 @@ import { Text } from '@react-three/drei';
  * If it was ngả về trước (leaning forward), it means the rotation sign was wrong or the axis was flip.
  * We will now force it to rotate NEGATIVE X to lean BACKWARDS.
  */
+// Helper component to render text onto a texture using HTML Canvas
+const CardTextTexture: React.FC<{ clippingPlane: THREE.Plane }> = ({ clippingPlane }) => {
+    const texture = useMemo(() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1024;
+        canvas.height = 512;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+            // Background (transparent)
+            ctx.clearRect(0, 0, 1024, 512);
+
+            // Text settings
+            ctx.font = 'bold 100px "Dancing Script", cursive, "Times New Roman", serif';
+            ctx.fillStyle = '#1a1a1a';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Draw text
+            ctx.fillText("Happy Valentine's", 512, 180);
+            ctx.fillText("Day My Love", 512, 320);
+        }
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.needsUpdate = true;
+        // tex.anisotropy = 16; // Cleaner text at angle
+        return tex;
+    }, []);
+
+    return (
+        <mesh position={[0, 0.1, 0.011]} rotation={[0, 0, 0]}>
+            <planeGeometry args={[1.8, 0.9]} />
+            <meshBasicMaterial
+                map={texture}
+                transparent
+                clippingPlanes={[clippingPlane]}
+            />
+        </mesh>
+    );
+};
+
 export const LetterEnvelope: React.FC = () => {
     // Parent handles visibility via unconditional mount/unmount
     // const active = useExperienceStore((s) => s.activeLayers.letter); 
@@ -108,6 +147,10 @@ export const LetterEnvelope: React.FC = () => {
         // 2. CARD SLIDE (Starts only after t > 0.7)
         const slideT = Math.max(0, (t - 0.7) * 3.33);
         cardRef.current.position.y = THREE.MathUtils.lerp(0, 1.4, slideT);
+        // Move card from behind base to in front as it slides out
+        cardRef.current.position.z = THREE.MathUtils.lerp(-0.03, 0.02, slideT);
+        // Hide card when envelope is closed to prevent backface visibility
+        cardRef.current.visible = t > 0.05;
 
         // Clip Plane Update
         const matrix = groupRef.current.matrixWorld;
@@ -136,14 +179,19 @@ export const LetterEnvelope: React.FC = () => {
         >
             <EnvelopeSparkle count={15} />
 
-            {/* 1. BASE PANEL */}
+            {/* 1. BASE PANEL - Front face */}
             <mesh position={[0, 0, -0.02]} castShadow={performanceLevel === 'high'} receiveShadow={performanceLevel === 'high'}>
                 <primitive object={baseGeometry} />
-                <meshPhysicalMaterial color={ENVELOPE_RED} roughness={0.9} side={THREE.DoubleSide} />
+                <meshPhysicalMaterial color={ENVELOPE_RED} roughness={0.9} side={THREE.FrontSide} />
+            </mesh>
+            {/* 1b. BASE PANEL - Back face (opaque blocker to prevent card showing through) */}
+            <mesh position={[0, 0, -0.025]}>
+                <primitive object={baseGeometry} />
+                <meshBasicMaterial color={ENVELOPE_RED} side={THREE.BackSide} />
             </mesh>
 
-            {/* 2. CARD */}
-            <group ref={cardRef} position={[0, 0, 0.01]} onClick={(e) => { e.stopPropagation(); if (isOpen) setReading(true); }}>
+            {/* 2. CARD - only visible once flap begins opening */}
+            <group ref={cardRef} position={[0, 0, -0.03]} onClick={(e) => { e.stopPropagation(); if (isOpen) setReading(true); }}>
                 <mesh geometry={cardGeometry} castShadow={performanceLevel === 'high'} receiveShadow={performanceLevel === 'high'}>
                     <meshPhysicalMaterial
                         color="#fffcf5"
@@ -152,22 +200,9 @@ export const LetterEnvelope: React.FC = () => {
                         clipShadows
                     />
                 </mesh>
-                <Text
-                    position={[0, 0.1, 0.01]}
-                    fontSize={0.12}
-                    color="#1a1a1a"
-                    maxWidth={2.0}
-                    textAlign="center"
-                    onSync={(textMesh) => {
-                        if (textMesh.material) {
-                            textMesh.material.clippingPlanes = [clippingPlane];
-                            textMesh.material.clipShadows = true;
-                            textMesh.material.needsUpdate = true;
-                        }
-                    }}
-                >
-                    {`Happy Valentine's\nDay My Love`}
-                </Text>
+
+                {/* Text Texture Replacement */}
+                <CardTextTexture clippingPlane={clippingPlane} />
             </group>
 
             {/* 3. POCKET FLAPS */}

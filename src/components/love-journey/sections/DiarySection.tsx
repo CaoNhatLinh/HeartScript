@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, memo } from 'react';
 import { motion } from 'framer-motion';
 import { push, ref, set, update, query, limitToLast, orderByChild, serverTimestamp, onValue } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
@@ -37,15 +37,227 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import Image from 'next/image';
+import { detectMood, MOODS, MoodType } from '@/lib/love-config';
+import { Sun, CloudRain, Heart as HeartIcon, Cloud as CloudIcon } from 'lucide-react';
+
+const MoodAtmosphere = memo(({ mood }: { mood: MoodType }) => {
+    // Love Particles (Memoized - stable random values via useMemo)
+    const loveParticles = useMemo(() => [...Array(15)].map((_, i) => ({ // eslint-disable-line
+        id: i,
+        left: Math.random() * 90 + 5, // eslint-disable-line
+        duration: 15 + Math.random() * 10, // eslint-disable-line
+        swayDuration: 3 + Math.random() * 4, // eslint-disable-line
+        delay: -(Math.random() * 20), // eslint-disable-line
+        size: Math.random() * 20 + 15, // eslint-disable-line
+        blur: Math.random() > 0.6 ? 'blur-[1px]' : 'blur-none', // eslint-disable-line
+        opacity: 0.3 + Math.random() * 0.3 // eslint-disable-line
+    })), []);
+
+    // Sad Particles (Memoized - stable random values via useMemo)
+    const sadParticles = useMemo(() => [...Array(40)].map((_, i) => ({ // eslint-disable-line
+        id: i,
+        left: Math.random() * 100, // eslint-disable-line
+        duration: 0.8 + Math.random() * 0.5, // eslint-disable-line
+        delay: -(Math.random() * 2), // eslint-disable-line
+        length: 60 + Math.random() * 40, // eslint-disable-line
+        opacity: 0.2 + Math.random() * 0.3 // eslint-disable-line
+    })), []);
+
+    // Happy Particles (Memoized - stable random values via useMemo)
+    const happyParticles = useMemo(() => [...Array(8)].map((_, i) => ({ // eslint-disable-line
+        id: i,
+        left: Math.random() * 90 + 5, // eslint-disable-line
+        top: Math.random() * 80 + 10, // eslint-disable-line
+        duration: 4 + Math.random() * 4, // eslint-disable-line
+        delay: -(Math.random() * 5), // eslint-disable-line
+        scale: 0.8 + Math.random() * 0.5, // eslint-disable-line
+        opacity: 0.4 + Math.random() * 0.4 // eslint-disable-line
+    })), []);
+
+    // Calm Particles (Memoized - stable random values via useMemo)
+    const calmParticles = useMemo(() => [...Array(5)].map((_, i) => ({ // eslint-disable-line
+        id: i,
+        top: 10 + Math.random() * 60, // eslint-disable-line
+        duration: 40 + Math.random() * 20, // eslint-disable-line
+        delay: -(Math.random() * 40), // eslint-disable-line
+        scale: 0.8 + Math.random() * 0.4, // eslint-disable-line
+        blur: Math.random() > 0.5 ? 'blur-sm' : 'blur-none', // eslint-disable-line
+        opacity: 0.3 + Math.random() * 0.2 // eslint-disable-line
+    })), []);
+
+    if (mood === 'love') {
+        return (
+            <>
+                <style jsx>{`
+                    @keyframes rise {
+                        0% { transform: translateY(110vh) scale(0.8); opacity: 0; }
+                        10% { opacity: var(--target-opacity); }
+                        90% { opacity: var(--target-opacity); }
+                        100% { transform: translateY(-20vh) scale(1.2); opacity: 0; }
+                    }
+                    @keyframes sway {
+                        0% { transform: translateX(-15px) rotate(-10deg); }
+                        100% { transform: translateX(15px) rotate(10deg); }
+                    }
+                    .heart-rise {
+                        animation: rise linear infinite;
+                    }
+                    .heart-sway {
+                        animation: sway ease-in-out infinite alternate;
+                    }
+                `}</style>
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-[5] w-full h-full">
+                    {loveParticles.map((p) => (
+                        <div
+                            key={`love-${p.id}`}
+                            className="heart-rise absolute"
+                            style={{
+                                left: `${p.left}%`,
+                                width: p.size,
+                                height: p.size,
+                                // Pass dynamic values to CSS vars
+                                ['--target-opacity' as string]: p.opacity,
+                                animationDuration: `${p.duration}s`,
+                                animationDelay: `${p.delay}s`
+                            }}
+                        >
+                            <div
+                                className={`heart-sway w-full h-full text-rose-400 ${p.blur}`}
+                                style={{ animationDuration: `${p.swayDuration}s` }}
+                            >
+                                <Heart className="w-full h-full fill-rose-300/50 stroke-rose-400" strokeWidth={1.5} />
+                            </div>
+                        </div>
+                    ))}
+                    {/* Soft Ambient Glow */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-rose-50/30 via-transparent to-transparent pointer-events-none" />
+                </div>
+            </>
+        );
+    }
+
+    if (mood === 'sad') {
+        return (
+            <>
+                <style jsx>{`
+                    @keyframes rainfall {
+                        0% { transform: translateY(-10vh); opacity: 0; }
+                        10% { opacity: var(--target-opacity); }
+                        90% { opacity: var(--target-opacity); }
+                        100% { transform: translateY(110vh); opacity: 0; }
+                    }
+                    .rain-drop { animation: rainfall linear infinite; }
+                `}</style>
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-[5] w-full h-full">
+                    {sadParticles.map((p) => (
+                        <div
+                            key={`sad-${p.id}`}
+                            className="rain-drop absolute w-[1.5px] bg-gradient-to-b from-transparent via-blue-400 to-transparent"
+                            style={{
+                                left: `${p.left}%`,
+                                height: p.length,
+                                ['--target-opacity' as string]: p.opacity,
+                                animationDuration: `${p.duration}s`,
+                                animationDelay: `${p.delay}s`
+                            }}
+                        />
+                    ))}
+                </div>
+            </>
+        );
+    }
+
+    if (mood === 'happy') {
+        return (
+            <>
+                <style jsx>{`
+                    @keyframes sun-spin {
+                        from { transform: rotate(0deg); }
+                        to { transform: rotate(360deg); }
+                    }
+                    @keyframes float-bob {
+                        0%, 100% { transform: translateY(0) scale(1); }
+                        50% { transform: translateY(-15px) scale(1.1); }
+                    }
+                    .sun-rotate { animation: sun-spin linear infinite; }
+                    .happy-float { animation: float-bob ease-in-out infinite; }
+                `}</style>
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-[5] w-full h-full">
+                    {/* Rotating Sun Rays Background */}
+                    <div
+                        className="sun-rotate absolute -top-[50%] -right-[50%] w-[200%] h-[200%] bg-[conic-gradient(from_0deg,transparent_0deg,rgba(251,191,36,0.1)_20deg,transparent_40deg)]"
+                        style={{ animationDuration: '60s' }}
+                    />
+
+                    {/* Floating Sun Motes */}
+                    {happyParticles.map((p) => (
+                        <div
+                            key={`happy-${p.id}`}
+                            className="happy-float absolute text-amber-400"
+                            style={{
+                                left: `${p.left}%`,
+                                top: `${p.top}%`,
+                                transform: `scale(${p.scale})`,
+                                opacity: p.opacity,
+                                animationDuration: `${p.duration}s`,
+                                animationDelay: `${p.delay}s`
+                            }}
+                        >
+                            <Sun className="w-6 h-6 fill-amber-300 stroke-amber-400" />
+                        </div>
+                    ))}
+                    <div className="absolute inset-0 bg-amber-50/20 pointer-events-none" />
+                </div>
+            </>
+        );
+    }
+
+    if (mood === 'calm') {
+        return (
+            <>
+                <style jsx>{`
+                    @keyframes cloud-drift {
+                        from { transform: translateX(-150px); }
+                        to { transform: translateX(100vw); }
+                    }
+                    .drifting-cloud { animation: cloud-drift linear infinite; }
+                `}</style>
+                <div className="absolute inset-0 pointer-events-none overflow-hidden z-[5] w-full h-full bg-teal-50/20">
+                    {calmParticles.map((p) => (
+                        <div
+                            key={`calm-${p.id}`}
+                            className="drifting-cloud absolute text-teal-200/60"
+                            style={{
+                                top: `${p.top}%`,
+                                opacity: p.opacity,
+                                animationDuration: `${p.duration}s`,
+                                animationDelay: `${p.delay}s`
+                            }}
+                        >
+                            <div className={`transform ${p.blur}`} style={{ transform: `scale(${p.scale})` }}>
+                                <Cloud className="w-24 h-24 fill-teal-100/50 stroke-teal-200" />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </>
+        );
+    }
+
+    return null; // Fallback
+});
+MoodAtmosphere.displayName = 'MoodAtmosphere';
 
 export function DiarySection() {
     const { user } = useAuthStore();
-    const [limitCount, setLimitCount] = useState(5);
+    const [limitCount, setLimitCount] = useState(20);
     const { data: entries, loading } = useCollection<JournalEntry>('journal', (qRef) =>
         query(qRef, orderByChild('createdAt'), limitToLast(limitCount))
     );
-    // Filter out deleted entries and reverse for latest first
-    const displayedEntries = [...entries].filter(entry => !entry.isDeleted).reverse();
+    // Filter out deleted entries (both isDeleted flag and deletedAt timestamp) and reverse for latest first
+    const displayedEntries = [...entries]
+        .filter(entry => !entry.isDeleted && !entry.deletedAt)
+        .reverse();
     const [newEntry, setNewEntry] = useState('');
     const [tempMedia, setTempMedia] = useState<{ url: string; type: 'image' | 'video'; file?: File }[]>([]);
     const [isWriting, setIsWriting] = useState(false);
@@ -59,6 +271,7 @@ export function DiarySection() {
     const [tempAvatars, setTempAvatars] = useState({ him: '', her: '' });
     const [isUploadingAvatar, setIsUploadingAvatar] = useState<'him' | 'her' | null>(null);
     const [editingId, setEditingId] = useState<string | null>(null);
+    const [currentMood, setCurrentMood] = useState<MoodType>('default');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const avatarInputRef = useRef<HTMLInputElement>(null);
 
@@ -151,28 +364,37 @@ export function DiarySection() {
 
             if (editingId) {
                 // Update existing entry
+                // Recalculate mood on update
+                const finalMood = currentMood !== 'default' ? currentMood : detectMood(newEntry);
+
                 await update(ref(rtdb, `journal/${editingId}`), {
                     text: newEntry,
                     media: uploadedMedia,
                     updatedAt: serverTimestamp(),
-                    updatedBy: user.uid
+                    updatedBy: user.uid,
+                    mood: finalMood
                 });
                 setEditingId(null);
             } else {
                 // Create new entry
                 const newRef = push(ref(rtdb, 'journal'));
+                // Ensure valid mood before saving
+                const finalMood = currentMood !== 'default' ? currentMood : detectMood(newEntry);
+
                 await set(newRef, {
                     text: newEntry,
                     media: uploadedMedia,
                     createdAt: serverTimestamp(),
                     authorEmail: user.email,
-                    authorId: user.uid
+                    authorId: user.uid,
+                    mood: finalMood
                 });
             }
 
             setNewEntry('');
             setTempMedia([]);
             setIsWriting(false);
+            setCurrentMood('default');
         } catch (error) {
             console.error('Upload failed:', error);
             alert('Failed to send letter. Please try again.');
@@ -182,9 +404,18 @@ export function DiarySection() {
     const handleEdit = (entry: JournalEntry) => {
         setNewEntry(entry.text);
         setTempMedia(entry.media || []);
+        setCurrentMood(entry.mood || 'default');
         setEditingId(entry.id);
         setSelectedEntry(null); // Close view dialog
         setIsWriting(true); // Open write dialog
+    };
+
+    const handleCloseWrite = () => {
+        setIsWriting(false);
+        setNewEntry('');
+        setTempMedia([]);
+        setEditingId(null);
+        setCurrentMood('default');
     };
 
     const handleDelete = (e: React.MouseEvent, id: string) => {
@@ -202,12 +433,13 @@ export function DiarySection() {
 
             const logRef = push(ref(rtdb, 'journal_deleted_logs'));
             const deletedLog: Omit<DeletedJournalLog, 'id'> = {
-                originalEntryId: entryToDelete.id,
-                text: entryToDelete.text,
-                media: entryToDelete.media,
-                createdAt: entryToDelete.createdAt,
-                authorEmail: entryToDelete.authorEmail,
-                authorId: entryToDelete.authorId,
+                originalEntryId: entryToDelete.id || 'unknown',
+                text: entryToDelete.text || '',
+                media: entryToDelete.media || [], // Ensure media is at least an empty array or null
+                createdAt: entryToDelete.createdAt || Date.now(),
+                authorEmail: entryToDelete.authorEmail || 'unknown',
+                authorId: entryToDelete.authorId || 'unknown',
+                mood: entryToDelete.mood || 'default',
                 deletedAt: serverTimestamp(),
                 deletedBy: user?.uid || 'unknown'
             };
@@ -299,6 +531,16 @@ export function DiarySection() {
 
     const isHim = (email?: string | null) => email && HIM_EMAILS.includes(email);
 
+    // Determine background mood:
+    // 1. If viewing an entry (selectedEntry), use its mood.
+    // 2. If writing/editing (isWriting), use the current detected mood.
+    // 3. Otherwise (List View), default to 'love' for a romantic atmosphere.
+    const activeMood = useMemo(() => {
+        if (selectedEntry) return selectedEntry.mood || 'love';
+        if (isWriting) return currentMood !== 'default' ? currentMood : 'love';
+        return 'love';
+    }, [selectedEntry, isWriting, currentMood]);
+
     return (
         <section className="h-screen w-screen flex flex-col relative overflow-hidden bg-[#faf9f6] snap-start shrink-0" suppressHydrationWarning>
             {/* Load Fonts */}
@@ -310,6 +552,8 @@ export function DiarySection() {
             <div className="absolute inset-0 opacity-[0.6] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-100/30 blur-[120px] rounded-full pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-100/30 blur-[120px] rounded-full pointer-events-none" />
+            {/* Dynamic Atmosphere */}
+            <MoodAtmosphere mood={activeMood} />
 
             <div className="h-full w-full max-w-4xl mx-auto p-6 md:p-8 flex flex-col relative z-10">
                 {/* Header Section */}
@@ -438,19 +682,7 @@ export function DiarySection() {
                             </DialogContent>
                         </Dialog>
 
-                        <Dialog open={isWriting} onOpenChange={(open) => {
-                            if (!open) {
-                                tempMedia.forEach(media => {
-                                    if (media.url.startsWith('blob:')) {
-                                        URL.revokeObjectURL(media.url);
-                                    }
-                                });
-                                setTempMedia([]);
-                                setNewEntry('');
-                                setEditingId(null);
-                            }
-                            setIsWriting(open);
-                        }}>
+                        <Dialog open={isWriting} onOpenChange={(open) => open ? setIsWriting(true) : handleCloseWrite()}>
                             <DialogTrigger asChild>
                                 <Button className="relative overflow-hidden rounded-full bg-stone-800 text-[#fffcf5] hover:bg-stone-900 font-['Playfair_Display'] px-10 py-6 text-lg shadow-xl shadow-stone-200 transition-all hover:scale-105 active:scale-95 group">
                                     <span className="relative z-10 flex items-center">
@@ -489,9 +721,32 @@ export function DiarySection() {
                                                 }}
                                             />
 
+                                            {/* Mood Indicator */}
+                                            <div className="absolute top-2 right-4 z-20 transition-all duration-500">
+                                                <div className={cn(
+                                                    "flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 backdrop-blur-sm border shadow-sm transition-colors",
+                                                    MOODS[currentMood].textColor.replace('text-', 'border-'),
+                                                    MOODS[currentMood].textColor.replace('text-', 'bg-').replace('600', '50')
+                                                )}>
+                                                    {(() => {
+                                                        const Icon = MOODS[currentMood].icon === 'Heart' ? HeartIcon :
+                                                            MOODS[currentMood].icon === 'Sun' ? Sun :
+                                                                MOODS[currentMood].icon === 'Cloud' ? CloudIcon :
+                                                                    MOODS[currentMood].icon === 'CloudRain' ? CloudRain : PenLine;
+                                                        return <Icon className={cn("w-4 h-4", MOODS[currentMood].textColor)} />;
+                                                    })()}
+                                                    <span className={cn("text-xs font-bold uppercase", MOODS[currentMood].textColor)}>
+                                                        {currentMood}
+                                                    </span>
+                                                </div>
+                                            </div>
+
                                             <Textarea
                                                 value={newEntry}
-                                                onChange={(e) => setNewEntry(e.target.value)}
+                                                onChange={(e) => {
+                                                    setNewEntry(e.target.value);
+                                                    setCurrentMood(detectMood(e.target.value));
+                                                }}
                                                 placeholder="bắt đầu viết ở đây nè..."
                                                 className="w-full min-h-[400px] border-0 bg-transparent text-2xl font-['Dancing_Script'] text-stone-800 focus-visible:ring-0 resize-none placeholder:text-stone-300 placeholder:italic p-0 pl-2 leading-[40px] pt-[9px]"
                                                 style={{ lineHeight: '40px' }}
@@ -608,6 +863,8 @@ export function DiarySection() {
                                 {displayedEntries.map((entry, idx) => {
                                     const him = isHim(entry.authorEmail);
                                     const rotation = idx % 2 === 0 ? '-rotate-1' : 'rotate-1';
+                                    const mood = entry.mood || detectMood(entry.text) || 'default';
+                                    const moodConfig = MOODS[mood];
 
                                     return (
                                         <motion.div
@@ -621,10 +878,19 @@ export function DiarySection() {
                                             {/* Cute Tape Effect */}
                                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 bg-[#fdf6e3]/80 backdrop-blur-sm shadow-sm opacity-90 z-20 rotate-2 transform border-l border-r border-[#e6e2d1]/50" />
 
+                                            {/* Mood Banner */}
+                                            <div className={cn(
+                                                "absolute -right-8 top-6 w-32 h-6 rotate-45 z-20 flex items-center justify-center shadow-sm text-[10px] font-bold uppercase tracking-widest text-white",
+                                                moodConfig.color.replace('from-', 'bg-gradient-to-r ').replace('/20', '')
+                                            )}>
+                                                {moodConfig.id !== 'default' && moodConfig.id}
+                                            </div>
+
                                             {/* Main Card - Postcard Style */}
                                             <div className={cn(
                                                 "relative bg-[#fffbf0] rounded-sm p-6 shadow-[2px_4px_16px_-2px_rgba(0,0,0,0.08)] cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-[4px_8px_24px_-4px_rgba(0,0,0,0.12)] border border-[#f0ebe0]",
-                                                "after:absolute after:inset-0 after:border-2 after:border-dashed after:border-stone-200 after:rounded-sm after:m-2 after:pointer-events-none"
+                                                "after:absolute after:inset-0 after:border-2 after:border-dashed after:border-stone-200 after:rounded-sm after:m-2 after:pointer-events-none",
+                                                `bg-gradient-to-br ${moodConfig.color}`
                                             )}>
                                                 {/* Paper Texture Overlay */}
                                                 <div className="absolute inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none" />
@@ -763,42 +1029,51 @@ export function DiarySection() {
                             </div>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fffbf0] relative">
-                            <div className="p-8 pb-12">
-                                <div className="relative min-h-[300px]">
-                                    {/* Precise Lines Background */}
-                                    <div
-                                        className="absolute inset-0 pointer-events-none w-full h-full"
-                                        style={{
-                                            backgroundImage: 'repeating-linear-gradient(transparent, transparent 39px, #e8e4d9 39px, #e8e4d9 40px)',
-                                            backgroundAttachment: 'local',
-                                        }}
-                                    />
+                        <div className="flex-1 relative overflow-hidden flex flex-col bg-[#fffbf0]">
+                            {/* Mood Atmosphere - Absolute Background Layer */}
+                            <div className="absolute inset-0 pointer-events-none z-0">
+                                <MoodAtmosphere mood={(!selectedEntry?.mood || selectedEntry?.mood === 'default') ? detectMood(selectedEntry?.text || '') : selectedEntry.mood} />
+                            </div>
 
-                                    <p className="text-2xl font-['Dancing_Script'] leading-[40px] text-stone-800 whitespace-pre-wrap relative z-10 pl-2 pt-[9px]">
-                                        {selectedEntry?.text}
-                                    </p>
-                                </div>
+                            {/* Scrollable Content Layer */}
+                            <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
 
-                                {/* Detailed Gallery */}
-                                {selectedEntry?.media && selectedEntry.media.length > 0 && (
-                                    <div className="mt-12">
-                                        <div className="flex items-center gap-2 mb-4 text-stone-400 font-['Montserrat'] text-xs uppercase tracking-widest font-bold">
-                                            <Paperclip className="w-4 h-4" /> Posted Photos & Videos
-                                        </div>
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {selectedEntry.media.map((m, i) => (
-                                                <div key={i} className="relative aspect-video rounded-xl overflow-hidden shadow-md border-4 border-white bg-stone-100 group">
-                                                    {m.type === 'video' ? (
-                                                        <video src={m.url} controls className="w-full h-full object-cover" />
-                                                    ) : (
-                                                        <Image src={m.url} alt="attachment" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
-                                                    )}
-                                                </div>
-                                            ))}
-                                        </div>
+                                <div className="p-8 pb-12 relative z-10">
+                                    <div className="relative min-h-[300px]">
+                                        {/* Precise Lines Background */}
+                                        <div
+                                            className="absolute inset-0 pointer-events-none w-full h-full -z-10"
+                                            style={{
+                                                backgroundImage: 'repeating-linear-gradient(transparent, transparent 39px, #e8e4d9 39px, #e8e4d9 40px)',
+                                                backgroundAttachment: 'local',
+                                            }}
+                                        />
+
+                                        <p className="text-2xl font-['Dancing_Script'] leading-[40px] text-stone-800 whitespace-pre-wrap relative z-10 pl-2 pt-[9px]">
+                                            {selectedEntry?.text}
+                                        </p>
                                     </div>
-                                )}
+
+                                    {/* Detailed Gallery */}
+                                    {selectedEntry?.media && selectedEntry.media.length > 0 && (
+                                        <div className="mt-12">
+                                            <div className="flex items-center gap-2 mb-4 text-stone-400 font-['Montserrat'] text-xs uppercase tracking-widest font-bold">
+                                                <Paperclip className="w-4 h-4" /> Posted Photos & Videos
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {selectedEntry.media.map((m, i) => (
+                                                    <div key={i} className="relative aspect-video rounded-xl overflow-hidden shadow-md border-4 border-white bg-stone-100 group">
+                                                        {m.type === 'video' ? (
+                                                            <video src={m.url} controls className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <Image src={m.url} alt="attachment" fill className="object-cover transition-transform duration-700 group-hover:scale-105" />
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
 

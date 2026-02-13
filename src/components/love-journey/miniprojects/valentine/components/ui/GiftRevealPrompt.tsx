@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gift, Sparkles, ChevronRight } from 'lucide-react';
 import { useExperienceStore } from '../../store/useExperienceStore';
+import { APP_CONSTANTS } from '../../constants/app';
 
 /**
  * GiftRevealPrompt - Hiển thị prompt để user click tiếp tục reveal gifts
@@ -24,23 +25,11 @@ export const GiftRevealPrompt: React.FC = () => {
     const getPromptContent = () => {
         switch (giftRevealStage) {
             case 0:
-                return {
-                    title: 'Một người bạn đặc biệt...',
-                    description: 'Đang mang đến món quà cho em',
-                    buttonText: 'Gặp người bạn này'
-                };
+                return APP_CONSTANTS.CONTENT.GIFT_REVEAL.STAGE_0;
             case 1:
-                return {
-                    title: 'Những khoảnh khắc đẹp',
-                    description: 'Kỉ niệm của chúng ta',
-                    buttonText: 'Xem kỷ niệm'
-                };
+                return APP_CONSTANTS.CONTENT.GIFT_REVEAL.STAGE_1;
             case 2:
-                return {
-                    title: 'Ngọt ngào như em',
-                    description: 'Chocolate Valentine dành cho em',
-                    buttonText: 'Nhận chocolate'
-                };
+                return APP_CONSTANTS.CONTENT.GIFT_REVEAL.STAGE_2;
             default:
                 return null;
         }
@@ -55,17 +44,17 @@ export const GiftRevealPrompt: React.FC = () => {
                 initial={{ opacity: 0, y: 50 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 50 }}
-                className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 pointer-events-auto"
+                className="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 pointer-events-auto w-auto max-w-[95vw] sm:max-w-3xl px-4"
             >
                 <motion.button
                     whileHover={{ scale: 1.05, y: -5 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={advanceGiftReveal}
                     className="
-                        flex items-center gap-4 px-8 py-4
+                        flex items-center gap-2 sm:gap-4 px-4 sm:px-8 py-3 sm:py-4 w-full sm:w-auto
                         bg-gradient-to-r from-pink-500/20 to-purple-500/20
                         backdrop-blur-lg border border-pink-300/30
-                        rounded-full shadow-2xl
+                        rounded-2xl sm:rounded-full shadow-2xl
                         hover:from-pink-500/30 hover:to-purple-500/30
                         transition-all duration-300
                     "
@@ -81,13 +70,13 @@ export const GiftRevealPrompt: React.FC = () => {
 
                     {/* Text */}
                     <div className="text-left">
-                        <div className="text-white font-semibold text-lg">{content.title}</div>
-                        <div className="text-white/60 text-sm">{content.description}</div>
+                        <div className="text-white font-semibold text-lg sm:text-xl whitespace-nowrap">{content.TITLE}</div>
+                        <div className="text-white/60 text-xs sm:text-sm">{content.DESCRIPTION}</div>
                     </div>
 
                     {/* Button text */}
                     <div className="flex items-center gap-1 bg-white/10 px-4 py-2 rounded-full">
-                        <span className="text-pink-300 font-medium">{content.buttonText}</span>
+                        <span className="text-pink-300 font-medium">{content.BUTTON}</span>
                         <ChevronRight size={18} className="text-pink-400" />
                     </div>
                 </motion.button>
@@ -98,7 +87,7 @@ export const GiftRevealPrompt: React.FC = () => {
                         <div
                             key={i}
                             className={`
-                                w-2 h-2 rounded-full transition-all duration-300
+                                w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full transition-all duration-300
                                 ${i < giftRevealStage ? 'bg-pink-400 scale-100' : 'bg-white/30 scale-75'}
                                 ${i === giftRevealStage ? 'bg-white animate-pulse scale-125' : ''}
                             `}

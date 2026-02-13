@@ -1,8 +1,9 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useCollection } from '@/hooks/useCollection';
 import { CalendarEvent } from '@/types';
-import { push, ref, set, query, orderByChild } from 'firebase/database';
+import { push, ref, set, query, orderByChild, serverTimestamp } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -17,7 +18,9 @@ import {
     ArrowRight,
     Loader2,
     Trash2,
-    Edit2
+    Edit2,
+    CheckCircle2,
+    Target
 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { format } from 'date-fns';
@@ -47,6 +50,74 @@ export function CalendarSection() {
     const [newTitle, setNewTitle] = useState('');
     const [newType, setNewType] = useState<'date' | 'anniversary'>('date');
     const [submitting, setSubmitting] = useState(false);
+
+    // Bucket List State
+    const [activeTab, setActiveTab] = useState<'calendar' | 'bucket'>('calendar');
+    const { data: goals, loading: loadingGoals } = useCollection<{ id: string, text: string, completed: boolean }>('goals', (qRef) => query(qRef, orderByChild('createdAt')));
+    const [newGoal, setNewGoal] = useState('');
+
+    const handleAddGoal = async () => {
+        if (!newGoal.trim()) return;
+        try {
+            await push(ref(rtdb, 'goals'), {
+                text: newGoal,
+                completed: false,
+                createdAt: serverTimestamp()
+            });
+            setNewGoal('');
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const toggleGoal = async (id: string, currentStatus: boolean) => {
+        try {
+            await set(ref(rtdb, `goals/${id}/completed`), !currentStatus);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const deleteGoal = async (id: string) => {
+        if (!confirm("Xóa mục tiêu này?")) return;
+        try {
+            await remove(ref(rtdb, `goals/${id}`));
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    // Pre-compute particle animations to avoid hydration mismatch
+    const particleAnimations = useMemo(() => {
+        return Array.from({ length: 8 }, (_, i) => {
+            // Use deterministic values based on index
+            const seed1 = Math.sin(i * 12.9898 + 78.233) * 43758.5453;
+            const seed2 = Math.sin(i * 93.9898 + 12.233) * 43758.5453;
+            const seed3 = Math.sin(i * 45.9898 + 34.233) * 43758.5453;
+            const seed4 = Math.sin(i * 67.9898 + 56.233) * 43758.5453;
+            const random1 = seed1 - Math.floor(seed1);
+            const random2 = seed2 - Math.floor(seed2);
+            const random3 = seed3 - Math.floor(seed3);
+            const random4 = seed4 - Math.floor(seed4);
+
+            return {
+                initial: { opacity: 0, y: 100, x: random1 * 100 },
+                animate: {
+                    opacity: [0, 0.6, 0],
+                    y: -120,
+                    x: random2 * 60 - 30,
+                    rotate: [0, 20, -20, 0]
+                },
+                transition: {
+                    duration: 12 + random3 * 8,
+                    repeat: Infinity,
+                    delay: random4 * 5,
+                    ease: "linear" as const
+                },
+                style: { left: `${random1 * 100}%` }
+            };
+        });
+    }, []);
 
     const getEventsForDay = (day: Date) => {
         return events.filter((e: CalendarEvent) => {
@@ -115,24 +186,14 @@ export function CalendarSection() {
 
             {/* Floating Background Elements */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                {[...Array(8)].map((_, i) => (
+                {particleAnimations.map((anim, i) => (
                     <motion.div
                         key={i}
-                        initial={{ opacity: 0, y: 100, x: Math.random() * 100 }}
-                        animate={{
-                            opacity: [0, 0.6, 0],
-                            y: -120,
-                            x: Math.random() * 60 - 30,
-                            rotate: [0, 20, -20, 0]
-                        }}
-                        transition={{
-                            duration: 12 + Math.random() * 8,
-                            repeat: Infinity,
-                            delay: Math.random() * 5,
-                            ease: "linear"
-                        }}
+                        initial={anim.initial}
+                        animate={anim.animate}
+                        transition={anim.transition}
                         className="absolute bottom-0 text-rose-200/60"
-                        style={{ left: `${Math.random() * 100}%` }}
+                        style={anim.style}
                     >
                         {i % 2 === 0 ? <Heart className="w-6 h-6 fill-rose-100" /> : <Sparkles className="w-4 h-4 text-yellow-200" />}
                     </motion.div>
@@ -141,7 +202,7 @@ export function CalendarSection() {
 
             <div className="relative z-10 w-full max-w-7xl h-full flex flex-col md:flex-row gap-8 items-stretch overflow-hidden">
 
-                {/* 1. Milestones Info (1/4) */}
+                {/* 1. Milestones Info & Tab Switcher (1/4) */}
                 <div className="hidden md:flex flex-col justify-center space-y-8 w-1/4">
                     <div className="space-y-6">
                         <motion.div
@@ -152,12 +213,31 @@ export function CalendarSection() {
                             <CalendarHeart className="w-3 h-3" />
                             Our Journey
                         </motion.div>
-                        <h2 className="text-7xl xl:text-8xl font-['Dancing_Script'] font-bold text-stone-800 leading-[0.85] tracking-tight drop-shadow-sm">
-                            Sweet <br /><span className="text-rose-500">History</span>
+                        <h2 className="text-6xl xl:text-7xl font-['Dancing_Script'] font-bold text-stone-800 leading-[0.85] tracking-tight drop-shadow-sm">
+                            Sweet <br /><span className="text-rose-500">Plans</span>
                         </h2>
-                        <p className="text-stone-500 text-lg font-['Patrick_Hand'] leading-relaxed max-w-xs pl-1 border-l-2 border-rose-200">
-                            Every date is a chapter, every moment is a heart-beat in our shared story...
-                        </p>
+
+                        {/* Tab Switcher */}
+                        <div className="flex bg-stone-100 p-1 rounded-2xl w-fit">
+                            <button
+                                onClick={() => setActiveTab('calendar')}
+                                className={cn(
+                                    "px-6 py-3 rounded-xl text-sm font-bold transition-all font-serif flex items-center gap-2",
+                                    activeTab === 'calendar' ? "bg-white shadow-sm text-stone-800" : "text-stone-400 hover:text-stone-600"
+                                )}
+                            >
+                                <CalendarHeart className="w-4 h-4" /> Calendar
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('bucket')}
+                                className={cn(
+                                    "px-6 py-3 rounded-xl text-sm font-bold transition-all font-serif flex items-center gap-2",
+                                    activeTab === 'bucket' ? "bg-white shadow-sm text-rose-500" : "text-stone-400 hover:text-stone-600"
+                                )}
+                            >
+                                <Target className="w-4 h-4" /> Bucket List
+                            </button>
+                        </div>
                     </div>
 
                     <Dialog open={isAdding} onOpenChange={(open) => {
@@ -230,67 +310,145 @@ export function CalendarSection() {
                     </Dialog>
                 </div>
 
-                {/* 2. Premium Calendar Box (Center) */}
-                <div className="flex-[1.2] flex flex-col justify-center items-center overflow-hidden h-full px-4">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="bg-white/80 backdrop-blur-[40px] p-8 lg:p-12 rounded-[50px] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.1)] border border-white relative w-full max-w-[420px] h-fit"
-                    >
-                        {/* Internal Soft Glow */}
-                        <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-rose-50/50 to-transparent rounded-t-[50px] pointer-events-none" />
+                {/* 2. Center Content (Calendar OR Bucket List) */}
+                <div className="flex-[1.2] flex flex-col justify-center items-center overflow-hidden h-full px-4 relative">
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'calendar' ? (
+                            <motion.div
+                                key="calendar"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="bg-white/80 backdrop-blur-[40px] p-8 lg:p-12 rounded-[50px] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.1)] border border-white relative w-full max-w-[420px] h-fit"
+                            >
+                                {/* Internal Soft Glow */}
+                                <div className="absolute inset-x-0 top-0 h-32 bg-gradient-to-b from-rose-50/50 to-transparent rounded-t-[50px] pointer-events-none" />
 
-                        <Calendar
-                            mode="single"
-                            selected={selectedDate}
-                            onSelect={setSelectedDate}
-                            className="p-0 select-none"
-                            classNames={{
-                                month: "space-y-8 w-full relative",
-                                month_caption: "flex justify-center items-center h-12 mb-6 relative",
-                                caption_label: "text-4xl font-['Dancing_Script'] font-bold text-stone-800 tracking-wide",
-                                nav: "absolute inset-0 flex items-center justify-between pointer-events-none z-20 px-1", // Container spans full width
-                                button_previous: cn(
-                                    "h-10 w-10 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-stone-800 pointer-events-auto",
-                                    "hover:bg-white/80 hover:shadow-md active:scale-90 border border-transparent hover:border-stone-100"
-                                ),
-                                button_next: cn(
-                                    "h-10 w-10 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-stone-800 pointer-events-auto",
-                                    "hover:bg-white/80 hover:shadow-md active:scale-90 border border-transparent hover:border-stone-100"
-                                ),
-                                month_grid: "w-full border-collapse relative z-10",
-                                weekdays: "grid grid-cols-7 w-full mb-4",
-                                weekday: "text-stone-300 font-serif italic text-[11px] font-bold uppercase tracking-widest text-center",
-                                week: "grid grid-cols-7 w-full mt-3",
-                                day: "relative p-0 text-center w-full flex items-center justify-center aspect-square",
-                                day_button: cn(
-                                    "h-11 w-11 p-0 font-serif text-lg transition-all rounded-[18px] text-stone-600 flex items-center justify-center relative group/day",
-                                    "hover:bg-rose-50 hover:text-rose-500 hover:scale-105"
-                                ),
-                                selected: cn(
-                                    "bg-stone-900 !text-white shadow-[0_10px_20px_-5px_rgba(28,25,23,0.3)] scale-110 !rounded-[18px] z-20 font-medium",
-                                    "hover:bg-stone-900 hover:text-white hover:scale-110", // Force override hover
-                                    "after:absolute after:bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-rose-200 after:rounded-full after:shadow-[0_0_8px_rgba(253,224,71,0.5)]"
-                                ),
-                                today: "text-rose-500 font-bold bg-rose-50/50",
-                                outside: "text-stone-200 opacity-0 pointer-events-none", // Hide outside days for cleaner look
-                                disabled: "text-stone-100 opacity-20",
-                                hidden: "invisible",
-                            }}
-                            components={{
-                                Chevron: (props) => {
-                                    if (props.orientation === 'left') return <ChevronRight className="w-5 h-5 rotate-180 stroke-[2.5]" />;
-                                    return <ChevronRight className="w-5 h-5 stroke-[2.5]" />;
-                                }
-                            }}
-                            modifiers={{
-                                hasEvent: (date) => getEventsForDay(date).length > 0
-                            }}
-                            modifiersClassNames={{
-                                hasEvent: "before:absolute before:top-2 before:right-2 before:w-1.5 before:h-1.5 before:bg-rose-400 before:rounded-full before:animate-pulse"
-                            }}
-                        />
-                    </motion.div>
+                                <Calendar
+                                    mode="single"
+                                    selected={selectedDate}
+                                    onSelect={setSelectedDate}
+                                    className="p-0 select-none"
+                                    classNames={{
+                                        month: "space-y-8 w-full relative",
+                                        month_caption: "flex justify-center items-center h-12 mb-6 relative",
+                                        caption_label: "text-4xl font-['Dancing_Script'] font-bold text-stone-800 tracking-wide",
+                                        nav: "absolute inset-0 flex items-center justify-between pointer-events-none z-20 px-1", // Container spans full width
+                                        button_previous: cn(
+                                            "h-10 w-10 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-stone-800 pointer-events-auto",
+                                            "hover:bg-white/80 hover:shadow-md active:scale-90 border border-transparent hover:border-stone-100"
+                                        ),
+                                        button_next: cn(
+                                            "h-10 w-10 transition-all rounded-full flex items-center justify-center text-stone-300 hover:text-stone-800 pointer-events-auto",
+                                            "hover:bg-white/80 hover:shadow-md active:scale-90 border border-transparent hover:border-stone-100"
+                                        ),
+                                        month_grid: "w-full border-collapse relative z-10",
+                                        weekdays: "grid grid-cols-7 w-full mb-4",
+                                        weekday: "text-stone-300 font-serif italic text-[11px] font-bold uppercase tracking-widest text-center",
+                                        week: "grid grid-cols-7 w-full mt-3",
+                                        day: "relative p-0 text-center w-full flex items-center justify-center aspect-square",
+                                        day_button: cn(
+                                            "h-11 w-11 p-0 font-serif text-lg transition-all rounded-[18px] text-stone-600 flex items-center justify-center relative group/day",
+                                            "hover:bg-rose-50 hover:text-rose-500 hover:scale-105"
+                                        ),
+                                        selected: cn(
+                                            "bg-stone-900 !text-white shadow-[0_10px_20px_-5px_rgba(28,25,23,0.3)] scale-110 !rounded-[18px] z-20 font-medium",
+                                            "hover:bg-stone-900 hover:text-white hover:scale-110", // Force override hover
+                                            "after:absolute after:bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-rose-200 after:rounded-full after:shadow-[0_0_8px_rgba(253,224,71,0.5)]"
+                                        ),
+                                        today: "text-rose-500 font-bold bg-rose-50/50",
+                                        outside: "text-stone-200 opacity-0 pointer-events-none", // Hide outside days for cleaner look
+                                        disabled: "text-stone-100 opacity-20",
+                                        hidden: "invisible",
+                                    }}
+                                    components={{
+                                        Chevron: (props) => {
+                                            if (props.orientation === 'left') return <ChevronRight className="w-5 h-5 rotate-180 stroke-[2.5]" />;
+                                            return <ChevronRight className="w-5 h-5 stroke-[2.5]" />;
+                                        }
+                                    }}
+                                    modifiers={{
+                                        hasEvent: (date) => getEventsForDay(date).length > 0
+                                    }}
+                                    modifiersClassNames={{
+                                        hasEvent: "before:absolute before:top-2 before:right-2 before:w-1.5 before:h-1.5 before:bg-rose-400 before:rounded-full before:animate-pulse"
+                                    }}
+                                />
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key="bucket"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="bg-white/80 backdrop-blur-[40px] p-8 rounded-[40px] shadow-[0_40px_100px_-40px_rgba(0,0,0,0.1)] border border-white relative w-full max-w-[450px] h-[500px] flex flex-col"
+                            >
+                                <h3 className="text-2xl font-serif font-black text-stone-800 mb-6 flex items-center gap-3">
+                                    <Target className="text-rose-500" />
+                                    Bucket List
+                                </h3>
+
+                                {loadingGoals ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-stone-300">
+                                        <Loader2 className="w-8 h-8 animate-spin" />
+                                    </div>
+                                ) : goals.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center h-full text-stone-400 font-['Patrick_Hand'] text-xl">
+                                        <p>Dream big, write it down!</p>
+                                    </div>
+                                ) : (
+                                    goals.map((goal: { id: string, text: string, completed: boolean }) => (
+                                        <motion.div
+                                            key={goal.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="group flex items-center gap-3 bg-stone-50 p-3 rounded-xl hover:bg-white transition-colors border border-transparent hover:border-rose-100"
+                                        >
+                                            <button
+                                                onClick={() => toggleGoal(goal.id, goal.completed)}
+                                                className={cn(
+                                                    "w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all",
+                                                    goal.completed ? "bg-rose-500 border-rose-500" : "border-stone-300 hover:border-rose-400"
+                                                )}
+                                            >
+                                                {goal.completed && <CheckCircle2 className="w-4 h-4 text-white" />}
+                                            </button>
+                                            <span className={cn(
+                                                "flex-1 font-['Patrick_Hand'] text-xl text-stone-700 pt-1",
+                                                goal.completed && "line-through text-stone-400"
+                                            )}>
+                                                {goal.text}
+                                            </span>
+                                            <button
+                                                onClick={() => deleteGoal(goal.id)}
+                                                className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-400 transition-all p-2"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </motion.div>
+                                    ))
+                                )}
+
+                                <div className="mt-4 pt-4 border-t border-stone-100">
+                                    <div className="flex gap-2">
+                                        <Input
+                                            value={newGoal}
+                                            onChange={(e) => setNewGoal(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && handleAddGoal()}
+                                            placeholder="Next adventure..."
+                                            className="bg-stone-50 border-none h-12 rounded-xl"
+                                        />
+                                        <Button
+                                            onClick={handleAddGoal}
+                                            className="h-12 w-12 rounded-xl bg-stone-900 hover:bg-black p-0"
+                                        >
+                                            <Plus className="w-5 h-5 text-white" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
                 {/* 3. Agenda Side View (1/3) */}

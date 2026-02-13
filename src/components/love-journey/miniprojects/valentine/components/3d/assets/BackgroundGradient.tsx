@@ -75,16 +75,16 @@ export const BackgroundGradient: React.FC = () => {
 
     if (!texture) {
         return (
-            <mesh position={[0, 0, 0]} scale={[100, 100, 100]}>
-                <boxGeometry />
+            <mesh position={[0, 0, 0]}>
+                <sphereGeometry args={[100, 64, 64]} />
                 <meshBasicMaterial color="#1a0a2e" side={THREE.BackSide} />
             </mesh>
         );
     }
 
     return (
-        <mesh position={[0, 0, 0]} scale={[100, 100, 100]}>
-            <boxGeometry />
+        <mesh position={[0, 0, 0]}>
+            <sphereGeometry args={[100, 64, 64]} />
             <meshBasicMaterial map={texture} side={THREE.BackSide} />
         </mesh>
     );

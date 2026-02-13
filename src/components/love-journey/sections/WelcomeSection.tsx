@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
 import { Settings, Check, X as XIcon, Loader2, Heart, Stars, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,7 @@ export function WelcomeSection() {
     const [mounted, setMounted] = useState(false);
     const [heartStyles, setHeartStyles] = useState<{ xStart: string, xEnd: string, duration: number, delay: number }[]>([]);
     const [days, setDays] = useState<number | null>(null);
+    const [displayedDays, setDisplayedDays] = useState(0); // For animation
     const [isEditing, setIsEditing] = useState(false);
     const [tempDate, setTempDate] = useState('2024-02-14');
     const [saving, setSaving] = useState(false);
@@ -33,11 +34,45 @@ export function WelcomeSection() {
             const val = snapshot.val();
             if (val) {
                 setTempDate(val);
-                setDays(differenceInDays(new Date(), new Date(val)));
+                // Simple day difference calculation
+                const today = new Date();
+                const startDate = new Date(val);
+                const diffTime = Math.abs(today.getTime() - startDate.getTime());
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+                setDays(diffDays + 1);
             }
         });
         return () => unsubscribe();
     }, []);
+
+    // Animate counter from 0 to actual days with smooth easing
+    useEffect(() => {
+        if (days === null) return;
+
+        const duration = 3500; // 3.5 seconds for smoother animation
+        const startTime = Date.now();
+
+        // Ease out cubic function for smooth deceleration
+        const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const easedProgress = easeOutCubic(progress);
+
+            const current = Math.floor(easedProgress * days);
+            setDisplayedDays(current);
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                setDisplayedDays(days); // Ensure final value is exact
+            }
+        };
+
+        requestAnimationFrame(animate);
+    }, [days]);
 
     const handleSaveDate = async () => {
         setSaving(true);
@@ -155,12 +190,19 @@ export function WelcomeSection() {
                     >
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">Ngày bắt đầu</span>
-                            <Input
-                                type="date"
-                                value={tempDate}
-                                onChange={(e) => setTempDate(e.target.value)}
-                                className="h-10 w-40 text-sm border-stone-100 bg-stone-50/50 rounded-xl focus:ring-rose-400 font-serif"
-                            />
+                            <div className="relative">
+                                <Input
+                                    type="date"
+                                    value={tempDate}
+                                    onChange={(e) => setTempDate(e.target.value)}
+                                    className="h-10 w-40 text-sm border-stone-100 bg-stone-50/50 rounded-xl focus:ring-rose-400 font-serif"
+                                />
+                                {tempDate && (
+                                    <span className="absolute -bottom-5 left-1 text-[10px] text-rose-400 font-bold uppercase whitespace-nowrap">
+                                        {format(new Date(tempDate), 'MMMM dd, yyyy')}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div className="flex gap-2 self-end">
                             <Button size="icon" onClick={handleSaveDate} disabled={saving} className="h-10 w-10 rounded-xl bg-stone-900 hover:bg-black shadow-lg shadow-stone-100">
@@ -243,20 +285,34 @@ export function WelcomeSection() {
                         <div className="h-px w-8 bg-stone-200" />
                     </motion.div>
 
-                    <h1 className="text-8xl md:text-[12rem] font-serif font-black text-stone-800 tracking-tighter leading-none">
-                        {days ?? 0}
-                    </h1>
+                    <motion.h1
+                        key={displayedDays}
+                        initial={{ scale: 1 }}
+                        animate={{ scale: [1, 1.02, 1] }}
+                        transition={{ duration: 0.3 }}
+                        className="text-8xl md:text-[12rem] font-serif font-black text-stone-800 tracking-tighter leading-none"
+                    >
+                        {displayedDays}
+                    </motion.h1>
 
-                    <motion.p
+                    <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         transition={{ delay: 0.8 }}
-                        className="text-2xl md:text-3xl font-serif italic text-stone-500"
+                        className="flex flex-col items-center gap-2"
                     >
-                        {days !== null ? 'Wonderful Days of Love' : 'Our Story Begins...'}
-                    </motion.p>
+                        <p className="text-2xl md:text-3xl font-serif italic text-stone-500">
+                            Days of Love
+                        </p>
+                        {tempDate && (
+                            <p className="text-sm font-['Montserrat'] uppercase tracking-widest text-stone-400 font-bold">
+                                Since {format(new Date(tempDate), 'MMMM dd, yyyy')}
+                            </p>
+                        )}
+                    </motion.div>
+
                 </div>
             </motion.div>
-        </section>
+        </section >
     );
 }

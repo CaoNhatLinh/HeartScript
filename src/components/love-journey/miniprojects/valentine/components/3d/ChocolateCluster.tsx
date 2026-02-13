@@ -1,8 +1,9 @@
 import React, { useRef, useMemo, useState, useEffect } from 'react';
 import { useFrame } from '@react-three/fiber';
 import type { ThreeEvent } from '@react-three/fiber';
-import { Float, Text } from '@react-three/drei';
+import { Float, Html } from '@react-three/drei';
 import * as THREE from 'three';
+import { useExperienceStore, SceneType } from '../../store/useExperienceStore';
 
 const ChocolateMaterial: React.FC = () => (
     <meshPhysicalMaterial
@@ -155,55 +156,93 @@ const HeartBurst: React.FC<{ active: boolean }> = ({ active }) => {
     );
 };
 
-// New Component: Diamond Ring
+// New Component: Diamond Ring with Brilliant Cut Diamond (Optimized)
 const Ring: React.FC = () => {
     const meshRef = useRef<THREE.Group>(null);
-    useFrame((state) => {
+    const rotationRef = useRef(0);
+
+    useFrame((state, delta) => {
         if (meshRef.current) {
             const t = state.clock.elapsedTime;
-            // Gentle float
-            meshRef.current.position.y = Math.sin(t * 0.5) * 0.1;
-            meshRef.current.rotation.y = t * 0.2;
-            meshRef.current.rotation.z = Math.sin(t * 0.3) * 0.1;
+            // Simplified float animation
+            meshRef.current.position.y = Math.sin(t * 0.5) * 0.08;
+            // Smoother rotation using delta
+            rotationRef.current += delta * 0.3;
+            meshRef.current.rotation.y = rotationRef.current;
         }
     });
 
+    // Simplified diamond geometry for better performance
+    const diamondGeometry = useMemo(() => {
+        const geo = new THREE.IcosahedronGeometry(0.18, 0); // Reduced detail level
+        const pos = geo.attributes.position;
+
+        for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i);
+            const y = pos.getY(i);
+            const z = pos.getZ(i);
+
+            if (y < 0) {
+                // Pavilion (bottom): sharper taper to point
+                const factor = 1.0 - Math.abs(y) * 2.5;
+                pos.setX(i, x * Math.max(0.05, factor));
+                pos.setZ(i, z * Math.max(0.05, factor));
+                pos.setY(i, y * 1.3);
+            } else {
+                // Crown (top): flatter, wider
+                pos.setY(i, y * 0.5);
+                const expand = 1.0 + y * 0.3;
+                pos.setX(i, x * expand);
+                pos.setZ(i, z * expand);
+            }
+        }
+        pos.needsUpdate = true;
+        geo.computeVertexNormals();
+        return geo;
+    }, []);
+
     return (
         <group ref={meshRef} rotation={[Math.PI / 4, 0, 0]}>
-            {/* Rose Gold Band */}
+            {/* Rose Gold Band - Simplified */}
             <mesh>
-                <torusGeometry args={[0.6, 0.04, 32, 100]} />
+                <torusGeometry args={[0.6, 0.04, 16, 64]} />
                 <meshStandardMaterial
-                    color="#F4C2C2" // Rose Gold
+                    color="#F4C2C2"
                     metalness={1.0}
-                    roughness={0.1}
-                    envMapIntensity={2}
+                    roughness={0.15}
+                    envMapIntensity={1.5}
                 />
             </mesh>
 
             {/* Setting / Prongs */}
             <mesh position={[0, 0.6, 0]}>
-                <cylinderGeometry args={[0.08, 0.06, 0.1, 8]} />
-                <meshStandardMaterial color="#F4C2C2" metalness={1} roughness={0.1} />
+                <cylinderGeometry args={[0.08, 0.06, 0.1, 6]} />
+                <meshStandardMaterial color="#F4C2C2" metalness={1} roughness={0.15} />
             </mesh>
 
-            {/* The Diamond */}
-            <mesh position={[0, 0.68, 0]}>
-                <octahedronGeometry args={[0.18, 0]} />
+            {/* Brilliant Cut Diamond - Optimized material */}
+            <mesh position={[0, 0.68, 0]} geometry={diamondGeometry}>
                 <meshPhysicalMaterial
-                    color="white"
-                    transmission={1.0}
+                    color="#ffffff"
+                    transmission={0.95}
                     opacity={1}
                     metalness={0.0}
                     roughness={0.0}
-                    ior={2.4}
-                    thickness={2.0}
+                    ior={2.42}
+                    thickness={0.4}
                     clearcoat={1.0}
-                    attenuationColor="white"
-                    attenuationDistance={1}
+                    clearcoatRoughness={0.0}
+                    specularIntensity={1.2}
+                    specularColor="#ffffff"
+                    envMapIntensity={2.5}
+                    attenuationColor="#f0e6ff"
+                    attenuationDistance={0.4}
                     toneMapped={false}
                 />
             </mesh>
+
+            {/* Subtle sparkle light */}
+            <pointLight position={[0, 0.75, 0.1]} color="#e0e8ff" intensity={0.4} distance={1.2} decay={2} />
         </group>
     );
 };
@@ -307,15 +346,38 @@ const Truffle: React.FC<{ hovered: boolean; bursting: boolean; isRevealed?: bool
     )
 }
 
-// Export correct type with prop
-const ConnectedChocolateCluster: React.FC<{ visible?: boolean }> = ({ visible = true }) => {
+
+
+// Wrapper to handle store logic decoupled from the visual component
+const ConnectedChocolateCluster: React.FC<{ visible?: boolean; ringTransform?: { position: number[]; rotation: number[]; scale: number } }> = ({ visible = true, ringTransform }) => {
+    const markTasted = useExperienceStore(s => s.markTastedChocolate);
+    const requestTransition = useExperienceStore(s => s.requestSceneTransition);
+
+    return <ChocolateClusterLogic visible={visible} markTasted={markTasted} requestTransition={requestTransition} ringTransform={ringTransform} />;
+}
+
+const ChocolateClusterLogic: React.FC<{ visible: boolean, markTasted: () => void, requestTransition: (scene: SceneType) => void, ringTransform?: { position: number[]; rotation: number[]; scale: number } }> = ({ visible, markTasted, requestTransition, ringTransform }) => {
     const groupRef = useRef<THREE.Group>(null);
     const [hovered, setHovered] = useState(false);
     const [clickCount, setClickCount] = useState(0);
     const [bursting, setBursting] = useState(false);
+    const hasTriggeredRef = useRef(false);
 
     // Surprise Logic: Reveal after 5 clicks
     const isRevealed = clickCount >= 5;
+
+    // Trigger completion logic once revealed
+    useEffect(() => {
+        if (isRevealed && !hasTriggeredRef.current) {
+            hasTriggeredRef.current = true;
+            // Wait 4 seconds for user to see the "Ring" and text, then transition
+            const timer = setTimeout(() => {
+                markTasted(); // This sets hasTastedChocolate -> true
+                requestTransition('ending');
+            }, 2000);
+            return () => clearTimeout(timer);
+        }
+    }, [isRevealed, markTasted, requestTransition]);
 
     // Use a spring-like ref for visibility transition
     const scaleRef = useRef(0);
@@ -335,8 +397,6 @@ const ConnectedChocolateCluster: React.FC<{ visible?: boolean }> = ({ visible = 
             groupRef.current.position.y = Math.sin(time * 0.3) * 0.1 - 0.2;
 
             // Apply scale to the whole group to hide/show
-            // Note: Individual children have their own scales, so we multiply or set parent scale.
-            // Since children use `scale` prop, changing parent scale works perfectly.
             groupRef.current.scale.setScalar(scaleRef.current);
         } else {
             groupRef.current.scale.setScalar(0);
@@ -354,7 +414,7 @@ const ConnectedChocolateCluster: React.FC<{ visible?: boolean }> = ({ visible = 
     return (
         <group
             ref={groupRef}
-            position={[-1.5, 0.8, 0]} // Moved UP higher as requested (0.5 -> 0.8)
+            position={[-1.5, 0.8, 0]}
             onPointerOver={() => visible && setHovered(true)}
             onPointerOut={() => setHovered(false)}
             onClick={handleClick}
@@ -366,29 +426,26 @@ const ConnectedChocolateCluster: React.FC<{ visible?: boolean }> = ({ visible = 
 
             <Float speed={1} rotationIntensity={0.1} floatIntensity={0.2}>
 
-                {/* 1. Background Heart - Centered in the circle */}
-                <group
-                    position={[0, 0, 0]}
-                    // Reduced max scale from 1.8 to 1.3 to stay within ring
-                    scale={isRevealed ? 1.3 : 1.0}
-                >
+                {/* 1. Background Heart */}
+                <group position={[0, 0, 0]} scale={isRevealed ? 1.3 : 1.0}>
                     <Truffle hovered={hovered} bursting={bursting} isRevealed={isRevealed} />
                 </group>
 
-                {/* 2. Foreground Ring - Far away from the other components */}
-                {isRevealed && (
-                    <group position={[0, 0.2, 4.0]} scale={1.2}>
-                        {/* Ring positioned far away on Z-axis */}
-                        <Ring />
-                    </group>
-                )}
+                {/* 2. Foreground Ring - Controlled by Debug Transform if available */}
+                <group
+                    position={ringTransform ? (ringTransform.position as [number, number, number]) : [0, 0.2, 4.0]}
+                    rotation={ringTransform ? (ringTransform.rotation as [number, number, number]) : [0, 0, 0]}
+                    scale={isRevealed ? (ringTransform ? ringTransform.scale : 1.2) : 0}
+                >
+                    <Ring />
+                </group>
 
-                {/* 3. The Ribbon - Rotating around the chocolate */}
+                {/* 3. The Ribbon */}
                 <group scale={1.2} position={[0, 0, 0]}>
                     <GoldRibbon />
                 </group>
 
-                {/* 4. Crystal Shards - Sparkling around */}
+                {/* 4. Crystal Shards */}
                 <CrystalShard position={[-3.0, 1.5, 1.5]} rotation={[0.5, 0.5, 0]} scale={0.8} />
                 <CrystalShard position={[3.5, -1.5, 0.5]} rotation={[-0.5, 0.2, 0.5]} scale={0.6} />
                 <CrystalShard position={[2.5, 2.5, -1.5]} rotation={[0, 0, 1]} scale={1.0} />
@@ -398,23 +455,52 @@ const ConnectedChocolateCluster: React.FC<{ visible?: boolean }> = ({ visible = 
                 <HeartBurst active={bursting} />
             </Float>
 
-            {/* Text Message - Adjusted position to be visible */}
-            {clickCount >= 1 && (
-                <Text
-                    position={[0, isRevealed ? -1.5 : 1.8, 1.0]}
-                    fontSize={isRevealed ? 0.25 : 0.22}
-                    color={isRevealed ? "#FFD700" : "#FFE0B2"}
-                    anchorX="center"
-                    anchorY="middle"
-                    letterSpacing={0.1}
-                    outlineWidth={0.01}
-                    outlineColor="#5D4037"
+            {/* Hover Hint */}
+            {visible && hovered && !isRevealed && (
+                <Html
+                    position={[0, 0, 0.5]}
+                    center
+                    distanceFactor={8}
+                    style={{ pointerEvents: 'none', userSelect: 'none' }}
                 >
-                    {isRevealed ? "MARRY ME?" : "SWEET LOVE"}
-                </Text>
+                    <div style={{
+                        fontSize: '22px',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        whiteSpace: 'nowrap',
+                        textShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        fontFamily: "'Dancing Script', cursive",
+                        fontWeight: '700',
+                        letterSpacing: '1px',
+                        opacity: 0.9
+                    }}>
+                        Nhấn liên tiếp...
+                    </div>
+                </Html>
+            )}
+
+            {/* Text Message */}
+            {clickCount >= 1 && (
+                <Html
+                    position={[0, isRevealed ? -1.5 : 1.8, 1.0]}
+                    center
+                    transform
+                    occlude
+                    style={{
+                        pointerEvents: 'none',
+                        whiteSpace: 'nowrap',
+                        color: isRevealed ? "#FFD700" : "#FFE0B2",
+                        fontSize: isRevealed ? '28px' : '24px',
+                        fontFamily: 'serif',
+                        textShadow: '0 2px 8px rgba(0,0,0,0.8)',
+                        fontWeight: 'bold',
+                        userSelect: 'none'
+                    }}
+                >
+                    {isRevealed ? "Mãi Thuộc Về Em" : "TÌNH YÊU NGỌT NGÀO"}
+                </Html>
             )}
         </group>
     );
 };
-// Export alias to maintain compatibility
+
 export const ChocolateCluster = ConnectedChocolateCluster;

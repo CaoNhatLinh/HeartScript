@@ -23,6 +23,8 @@ export interface JournalEntry {
     isDeleted?: boolean;
     deletedAt?: number | null;
     deletedBy?: string;
+    // New Feature: Mood Tracking
+    mood?: 'love' | 'happy' | 'calm' | 'sad' | 'default';
 }
 
 export interface Memory {
@@ -51,4 +53,5 @@ export interface DeletedJournalLog {
     authorId: string;
     deletedAt: any; // Firebase server timestamp
     deletedBy: string;
+    mood?: 'love' | 'happy' | 'calm' | 'sad' | 'default';
 }

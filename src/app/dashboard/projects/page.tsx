@@ -88,10 +88,10 @@ export default function ProjectsPage() {
     };
 
     return (
-        <div className="space-y-8 min-h-[80vh]">
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="space-y-8 min-h-[80vh] px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-gray-800 flex items-center justify-center md:justify-start gap-3">
+                    <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-800 flex items-center justify-center md:justify-start gap-3">
                         <Wand2 className="w-8 h-8 text-indigo-500" />
                         Creative Space
                     </h1>

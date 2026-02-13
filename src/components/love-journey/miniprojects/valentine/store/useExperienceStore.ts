@@ -1,15 +1,19 @@
 import { create } from 'zustand';
 
 export type SceneType = 'prelude' | 'intro' | 'flower' | 'climax' | 'chocolate' | 'ending';
-export type FocusTarget = 'rose' | 'envelope' | 'photo' | 'chocolate' | 'center' | 'intro_start';
+export type FocusTarget = 'rose' | 'envelope' | 'photo' | 'chocolate' | 'center' | 'intro_start' | 'next_friend';
 
-export type LayerKey = 'starfield' | 'filmGrain' | 'lightPulse' | 'meteor' | 'rain' | 'letter' | 'hearts' | 'floatingWords';
+export type LayerKey = 'starfield' | 'filmGrain' | 'meteor' | 'rain' | 'hearts' | 'floatingWords';
 
 interface PendingTransition { scene: SceneType; opts?: Record<string, unknown> }
 
 export interface LayerParams {
     heartCount: number;
     heartSpeed: number;
+    heartScale: number;
+    // Starfield
+    starfieldCount: number;
+    starfieldRadius: number;
     meteorCount: number;
     meteorSpeed: number;
     meteorAngle: number;
@@ -51,6 +55,8 @@ interface ExperienceState {
     bloomComplete: boolean;
     audioPlaying: boolean;
     audioVolume: number;
+    introPhase: 'none' | 'phone-lock' | 'phone-passcode' | 'phone-chat' | 'phone-gift' | 'completed';
+    isIntroStarting: boolean;
 
     // Story State
     storyStep: number;
@@ -123,6 +129,8 @@ interface ExperienceState {
     toggleAudio: () => void;
     setAudioPlaying: (playing: boolean) => void;
     setAudioVolume: (volume: number) => void;
+    setIntroPhase: (phase: 'none' | 'phone-lock' | 'phone-passcode' | 'phone-chat' | 'phone-gift' | 'completed') => void;
+    setIsIntroStarting: (starting: boolean) => void;
 
     // Rose Interaction State
     roseHover: boolean;
@@ -162,19 +170,48 @@ interface ExperienceState {
     isAnimating: boolean;
     setIsAnimating: (animating: boolean) => void;
 
+    // Scene Transition Overlay
+    transitionState: 'idle' | 'fading-out' | 'fading-in';
+    setTransitionState: (state: 'idle' | 'fading-out' | 'fading-in') => void;
+
+    // Confetti
+    showConfetti: boolean;
+    triggerConfetti: () => void;
+
+    // Photo Gallery
+    isGalleryOpen: boolean;
+    galleryIndex: number;
+    setGalleryOpen: (open: boolean, index?: number) => void;
+
+    // Modals
+    showMemoryModal: boolean;
+    setShowMemoryModal: (show: boolean) => void;
+    showPromiseModal: boolean;
+    setShowPromiseModal: (show: boolean) => void;
+
+    // Valentine Images
+    valentinePhotos: string[];
+    setValentinePhotos: (photos: string[]) => void;
+
     // Debug
     visibleModels: {
         rose: boolean;
         envelope: boolean;
-        photo: boolean;
         chocolate: boolean;
         mascot: boolean;
+        photo: boolean;
+        candles: boolean;
+        lanterns: boolean;
+        petals: boolean;
+        balloons: boolean;
+        giftBox: boolean;
+        ring: boolean;
     };
-    toggleModelVisibility: (model: 'rose' | 'envelope' | 'photo' | 'chocolate' | 'mascot') => void;
+    toggleModelVisibility: (model: 'rose' | 'envelope' | 'chocolate' | 'mascot' | 'photo' | 'candles' | 'lanterns' | 'petals' | 'balloons' | 'giftBox' | 'ring') => void;
 
     // Advanced Transform Control
-    modelTransforms: Record<'rose' | 'envelope' | 'photo' | 'chocolate' | 'mascot', { position: number[], rotation: number[], scale: number }>;
-    setModelTransform: (model: 'rose' | 'envelope' | 'photo' | 'chocolate' | 'mascot', key: 'position' | 'rotation' | 'scale', value: number | number[]) => void;
+    modelTransforms: Record<'rose' | 'envelope' | 'chocolate' | 'mascot' | 'photo' | 'candles' | 'lanterns' | 'petals' | 'balloons' | 'giftBox' | 'ring', { position: number[], rotation: number[], scale: number }>;
+    setModelTransform: (model: 'rose' | 'envelope' | 'chocolate' | 'mascot' | 'photo' | 'candles' | 'lanterns' | 'petals' | 'balloons' | 'giftBox' | 'ring', key: 'position' | 'rotation' | 'scale', value: number | number[]) => void;
 }
 
 export const useExperienceStore = create<ExperienceState>((set) => ({
@@ -185,14 +222,14 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
     bloomComplete: false,
     audioPlaying: false,
     audioVolume: 0.5,
+    introPhase: 'phone-lock', // Start with phone intro
+    isIntroStarting: false,
 
     activeLayers: {
         starfield: true,
         filmGrain: true,
-        lightPulse: false,
         meteor: false,
         rain: false,
-        letter: false,
         hearts: false, // Default to FALSE (Prelude state)
         floatingWords: false, // Default to FALSE
     },
@@ -200,20 +237,24 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
     layerParams: {
         heartCount: 50,
         heartSpeed: 1.0, // multiplier
+        heartScale: 3.0,
+        // Starfield
+        starfieldCount: 1500,
+        starfieldRadius: 60,
         meteorCount: 40,
         meteorSpeed: 0.008,
         meteorAngle: -0.8,
         rainCount: 300,
         rainOpacity: 0.8,
         filmGrainIntensity: 0.04,
-        vignetteDarkness: 1.1,
-        bloomIntensity: 2.0, // HIGH BLOOM initially for "Glowing Rose in Dark"
+        vignetteDarkness: 0.6,
+        bloomIntensity: 1.2,
         chromaOffset: 0.0025,
         dofFocus: 2.8,
         dofBokehScale: 0.6,
-        // Lighting & Color Grading - START DARK
-        ambientIntensity: 0.01, // Very dark ambient
-        envIntensity: 0.0,      // No environment light initially
+        // Lighting & Color Grading
+        ambientIntensity: 0.15,
+        envIntensity: 0.4,
         envRotation: 0,
         brightness: 0,
         contrast: 0,
@@ -225,9 +266,9 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
         floatingWordsSize: 1.0,
         floatingWordsColor: '#E8AEB7',
         // Wind Effect Defaults
-        windSpeed: 1.0,
+        windSpeed: 1.5,
         windAngle: 45, // degrees
-        windIntensity: 0.5,
+        windIntensity: 0.8,
         // Sunset Lighting Defaults
         sunsetIntensity: 0.6,
         sunsetAngle: 15, // degrees from horizon
@@ -241,8 +282,14 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
         photo: true,
         chocolate: true,
         mascot: true, // Allow mascot to show when logic met
+        candles: true,
+        lanterns: true,
+        petals: true,
+        balloons: true,
+        giftBox: true,
+        ring: true,
     },
-    toggleModelVisibility: (model: 'rose' | 'envelope' | 'photo' | 'chocolate' | 'mascot') => set((state) => ({
+    toggleModelVisibility: (model: 'rose' | 'envelope' | 'chocolate' | 'mascot' | 'photo' | 'candles' | 'lanterns' | 'petals' | 'balloons' | 'giftBox' | 'ring') => set((state) => ({
         visibleModels: { ...state.visibleModels, [model]: !state.visibleModels[model] }
     })),
     setLayerParam: (key, value) => set((state) => ({ layerParams: { ...state.layerParams, [key]: value } })),
@@ -279,24 +326,24 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
 
     enableLayersForScene: (scene) => set(() => {
         const presets: Record<SceneType, Record<LayerKey, boolean>> = {
-            prelude: { starfield: true, filmGrain: true, lightPulse: false, meteor: false, rain: false, letter: false, hearts: false, floatingWords: false },
-            intro: { starfield: true, filmGrain: true, lightPulse: true, meteor: false, rain: false, letter: false, hearts: true, floatingWords: true },
-            flower: { starfield: true, filmGrain: true, lightPulse: true, meteor: false, rain: false, letter: true, hearts: true, floatingWords: true },
-            climax: { starfield: true, filmGrain: true, lightPulse: true, meteor: true, rain: false, letter: true, hearts: true, floatingWords: true },
-            chocolate: { starfield: true, filmGrain: false, lightPulse: true, meteor: false, rain: false, letter: true, hearts: true, floatingWords: true },
-            ending: { starfield: true, filmGrain: false, lightPulse: false, meteor: false, rain: false, letter: false, hearts: true, floatingWords: true },
+            prelude: { starfield: true, filmGrain: true, meteor: false, rain: false, hearts: false, floatingWords: false },
+            intro: { starfield: true, filmGrain: true, meteor: false, rain: false, hearts: true, floatingWords: true },
+            flower: { starfield: true, filmGrain: true, meteor: false, rain: false, hearts: true, floatingWords: true },
+            climax: { starfield: true, filmGrain: true, meteor: true, rain: false, hearts: true, floatingWords: true },
+            chocolate: { starfield: true, filmGrain: false, meteor: false, rain: false, hearts: true, floatingWords: true },
+            ending: { starfield: true, filmGrain: false, meteor: false, rain: false, hearts: true, floatingWords: true },
         };
         return { activeLayers: presets[scene] || presets.prelude };
     }),
 
     setScene: (scene) => set((state) => {
         const presets: Record<SceneType, Record<LayerKey, boolean>> = {
-            prelude: { starfield: true, filmGrain: true, lightPulse: false, meteor: false, rain: false, letter: false, hearts: false, floatingWords: false },
-            intro: { starfield: true, filmGrain: true, lightPulse: true, meteor: false, rain: false, letter: false, hearts: true, floatingWords: true },
-            flower: { starfield: true, filmGrain: true, lightPulse: true, meteor: false, rain: false, letter: true, hearts: true, floatingWords: true },
-            climax: { starfield: true, filmGrain: true, lightPulse: true, meteor: true, rain: false, letter: true, hearts: true, floatingWords: true },
-            chocolate: { starfield: true, filmGrain: false, lightPulse: true, meteor: false, rain: false, letter: true, hearts: true, floatingWords: true },
-            ending: { starfield: true, filmGrain: false, lightPulse: false, meteor: false, rain: false, letter: false, hearts: true, floatingWords: true },
+            prelude: { starfield: true, filmGrain: true, meteor: false, rain: false, hearts: false, floatingWords: false },
+            intro: { starfield: true, filmGrain: true, meteor: false, rain: false, hearts: true, floatingWords: true },
+            flower: { starfield: true, filmGrain: true, meteor: false, rain: false, hearts: true, floatingWords: true },
+            climax: { starfield: true, filmGrain: true, meteor: true, rain: false, hearts: true, floatingWords: true },
+            chocolate: { starfield: true, filmGrain: false, meteor: false, rain: false, hearts: true, floatingWords: true },
+            ending: { starfield: true, filmGrain: false, meteor: false, rain: false, hearts: true, floatingWords: true },
         };
 
         // Determine focus target based on scene automatically if needed
@@ -353,11 +400,11 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
     cameraSize: { width: 144, height: 108 },
     setCameraSize: (size) => set({ cameraSize: size }),
 
-    // Background Config - Mặc định là Aurora đẹp
+    // Background Config - Brighter Valentine palette
     backgroundConfig: {
-        gradientStart: '#1a0a2e',  // Tím đậm
-        gradientMid: '#2d1b4e',    // Tím trung
-        gradientEnd: '#0f0a1e',    // Tím rất đậm
+        gradientStart: '#1a0a1e',
+        gradientMid: '#4a1942',
+        gradientEnd: '#2d1b3d',
         style: 'aurora'
     },
     setBackgroundConfig: (config) => set((state) => ({
@@ -367,6 +414,8 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
     toggleAudio: () => set((state) => ({ audioPlaying: !state.audioPlaying })),
     setAudioPlaying: (playing) => set({ audioPlaying: playing }),
     setAudioVolume: (volume) => set({ audioVolume: volume }),
+    setIntroPhase: (phase) => set({ introPhase: phase }),
+    setIsIntroStarting: (starting) => set({ isIntroStarting: starting }),
 
     roseHover: false,
     setRoseHover: (hover) => set({ roseHover: hover }),
@@ -377,9 +426,17 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
 
     // Gift Reveal Stage
     giftRevealStage: 0,
-    advanceGiftReveal: () => set((state) => ({
-        giftRevealStage: Math.min(state.giftRevealStage + 1, 3)
-    })),
+    advanceGiftReveal: () => set((state) => {
+        const newStage = Math.min(state.giftRevealStage + 1, 3);
+        let newFocusTarget: FocusTarget = state.focusTarget;
+        if (newStage === 1) newFocusTarget = 'next_friend';
+        if (newStage === 2) newFocusTarget = 'photo';
+        if (newStage === 3) newFocusTarget = 'chocolate';
+        return {
+            giftRevealStage: newStage,
+            focusTarget: newFocusTarget
+        };
+    }),
     resetGiftReveal: () => set({ giftRevealStage: 0 }),
 
     setFloatingWordsList: (words) => set({ floatingWordsList: words }),
@@ -394,18 +451,53 @@ export const useExperienceStore = create<ExperienceState>((set) => ({
     modelTransforms: {
         rose: { position: [-3.7, 1.6, 3.7], rotation: [0, 0, 0], scale: 1.2 },
         envelope: { position: [5.0, -0.5, 2.0], rotation: [0, -0.3, 0], scale: 1.0 },
-        chocolate: { position: [-5.0, 6.0, 0.3], rotation: [-0.342, -0.4, 0.0], scale: 1.3 },
+        chocolate: { position: [-5.2, 6.0, 0.3], rotation: [-0.342, -0.4, 0.0], scale: 1.2 },
         mascot: { position: [0.5, 0.4, 1.9], rotation: [-0.042, 0.0, 0.0], scale: 2.8 },
         photo: { position: [1.1, 1.5, 0], rotation: [0, 0, 0], scale: 1 },
+        candles: { position: [-2.5, 0.0, 4.5], rotation: [0, 0, 0], scale: 3.0 },
+        lanterns: { position: [0, 0, 0], rotation: [0, 0, 0], scale: 1 },
+        petals: { position: [0, 0, 0], rotation: [0, 0, 0], scale: 1 },
+        balloons: { position: [0, 4.5, 2.0], rotation: [0, 0, 0], scale: 1.5 },
+        giftBox: { position: [2.5, 0.0, 3.5], rotation: [0, 0, 0], scale: 1 },
+        ring: { position: [2.1, -0.4, 2.0], rotation: [0, 0, 0], scale: 0.9 },
     },
-    setModelTransform: (model, key, value) => set((state) => ({
+    setModelTransform: (model: 'rose' | 'envelope' | 'chocolate' | 'mascot' | 'photo' | 'candles' | 'lanterns' | 'petals' | 'balloons' | 'giftBox' | 'ring', key: 'position' | 'rotation' | 'scale', value: number | number[]) => set((state) => ({
         modelTransforms: {
             ...state.modelTransforms,
-            [model]: { ...state.modelTransforms[model], [key]: value }
+            [model]: {
+                ...state.modelTransforms[model],
+                [key]: value
+            } as { position: number[]; rotation: number[]; scale: number }
         }
     })),
 
     // Animating flag to control render loop activation
     isAnimating: false,
     setIsAnimating: (animating) => set({ isAnimating: animating }),
+
+    // Scene Transition Overlay
+    transitionState: 'idle',
+    setTransitionState: (state) => set({ transitionState: state }),
+
+    // Confetti
+    showConfetti: false,
+    triggerConfetti: () => {
+        set({ showConfetti: true });
+        setTimeout(() => set({ showConfetti: false }), 4000);
+    },
+
+    // Photo Gallery
+    isGalleryOpen: false,
+    galleryIndex: 0,
+    setGalleryOpen: (open, index) => set({ isGalleryOpen: open, galleryIndex: index ?? 0 }),
+
+    // Story Modals
+    showMemoryModal: false,
+    setShowMemoryModal: (show) => set({ showMemoryModal: show }),
+    showPromiseModal: false,
+    setShowPromiseModal: (show) => set({ showPromiseModal: show }),
+
+    // Valentine Photos
+    valentinePhotos: [],
+    setValentinePhotos: (photos) => set({ valentinePhotos: photos }),
 }));

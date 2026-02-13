@@ -10,6 +10,8 @@ import { useFrame, type ThreeEvent } from '@react-three/fiber';
 import { useSpring, animated } from '@react-spring/three';
 import { Html } from '@react-three/drei';
 import { useExperienceStore } from '../../store/useExperienceStore';
+import { useAudioData } from '../../store/useAudioStore';
+import { EnergyBurst } from './objects/EnergyBurst';
 
 // ---------------------------------------------------------
 // LUXURY CINEMATIC CRYSTAL ROSE - REFINED VERSION
@@ -261,6 +263,7 @@ export const CrystalRose: React.FC<{
     const setOpenCount = useExperienceStore(s => s.setOpenCount);
     const setIsInspecting = useExperienceStore(s => s.setIsInspecting);
     const performanceLevel = useExperienceStore((s) => s.performanceLevel);
+    const readAudioData = useAudioData();
 
     // Interaction State
     const [isHolding, setIsHolding] = useState(false);
@@ -331,10 +334,37 @@ export const CrystalRose: React.FC<{
 
     const totalCount = petalsData.length;
 
+    const [burstTrigger, setBurstTrigger] = useState(0);
+
     const handleInteract = () => {
+        setBurstTrigger(prev => prev + 1);
+
+        // FLASH EFFECT: Temporarily boost lighting intensities
+        const currentParams = useExperienceStore.getState().layerParams;
+
+        // Use current values unless they are already "boosted"
+        const baseEnv = currentParams.envIntensity > 1.5 ? 0.4 : currentParams.envIntensity;
+        const baseAmbient = currentParams.ambientIntensity > 0.5 ? 0.15 : currentParams.ambientIntensity;
+        const baseBloom = currentParams.bloomIntensity > 3.0 ? 1.2 : currentParams.bloomIntensity;
+
+        useExperienceStore.getState().setLayerParams({
+            envIntensity: 0.8,
+            ambientIntensity: 0.3,
+            bloomIntensity: 2.0
+        });
+
+        // Reset after a short delay to original base values
+        setTimeout(() => {
+            useExperienceStore.getState().setLayerParams({
+                envIntensity: baseEnv,
+                ambientIntensity: baseAmbient,
+                bloomIntensity: baseBloom
+            });
+        }, 150);
+
         if (currentScene === 'prelude') {
             requestSceneTransition('intro');
-            return;
+            // Fall through to bloom logic - no early return so first click also blooms
         }
 
         const next = Math.min(openCount + 6, totalCount);
@@ -388,7 +418,8 @@ export const CrystalRose: React.FC<{
         }
         if (glowLightRef.current) {
             const pulse = 1 + Math.sin(t * 3.0) * 0.15;
-            glowLightRef.current.intensity = (0.5 + bloomProgress * 3.0) * pulse;
+            const audioData = readAudioData();
+            glowLightRef.current.intensity = (0.5 + bloomProgress * 3.0) * pulse * (1 + audioData.bass * 0.3);
         }
     });
 
@@ -472,11 +503,19 @@ export const CrystalRose: React.FC<{
                 />
             ))}
 
-            {/* Glowing Core - Visible Heart of the Flower */}
-            <mesh ref={coreRef} position={[0, 0.4, 0]}>
-                <sphereGeometry args={[0.12, 32, 32]} />
-                <meshBasicMaterial color="#ffeba1" transparent opacity={0.9} toneMapped={false} />
+            {/* Glowing Core - Pure Light Source */}
+            <mesh ref={coreRef} position={[0, 0.15, 0]}>
+                <coneGeometry args={[0.04, 0.15, 16]} />
+                <meshStandardMaterial
+                    color="#ffffff"
+                    emissive="#ffffff"
+                    emissiveIntensity={50.0}
+                    toneMapped={false}
+                />
             </mesh>
+
+            {/* Energy Burst Effect */}
+            <EnergyBurst trigger={burstTrigger} color="#ff4d6d" />
 
             <pointLight
                 ref={glowLightRef}

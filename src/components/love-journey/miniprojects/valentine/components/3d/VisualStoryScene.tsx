@@ -6,13 +6,17 @@ import * as THREE from 'three';
 import { useExperienceStore } from '../../store/useExperienceStore';
 import { CrystalRose } from './CrystalRose';
 import { ChocolateCluster } from './ChocolateCluster';
-import { MemoryGroup } from './MemoryGroup';
 import { SceneEffects } from './SceneEffects';
 import { Particles } from './Particles';
 import { FloatingHearts } from './assets/FloatingHearts';
 import { WindEffect } from './layers/WindEffect';
 import { LetterEnvelope } from './layers/LetterEnvelope';
 import { SoftGroundShadow } from './SoftGroundShadow';
+import { CandleSet } from './objects/CandleSet';
+import { GiftBox } from './objects/GiftBox';
+import { HeartBalloons } from './objects/HeartBalloons';
+import { PetalScatter } from './objects/PetalScatter';
+import { HangingPolaroids } from './objects/HangingPolaroids';
 import { useGLTF } from '@react-three/drei';
 
 /**
@@ -37,7 +41,16 @@ export const VisualStoryScene: React.FC = React.memo(() => {
 
     // 2. Envelope (Bì thư) appears when rose bloomed and scene is flower+
     const isFlowerOrLater = ['flower', 'climax', 'chocolate', 'ending'].includes(currentScene);
-    const showEnvelope = (bloomProgress >= 0.85) && isFlowerOrLater && (visibleModels?.envelope ?? true);
+    const showEnvelope = (bloomProgress >= 0.99) && isFlowerOrLater && (visibleModels?.envelope ?? true);
+
+    // Sync visibility state for useFrame loop
+    const showRoseRef = React.useRef(showRose);
+    const showEnvelopeRef = React.useRef(showEnvelope);
+
+    React.useLayoutEffect(() => {
+        showRoseRef.current = showRose;
+        showEnvelopeRef.current = showEnvelope;
+    }, [showRose, showEnvelope]);
 
     // Scene context for gift reveals
     const isClimaxOrLater = ['climax', 'chocolate', 'ending'].includes(currentScene);
@@ -52,10 +65,16 @@ export const VisualStoryScene: React.FC = React.memo(() => {
     // 5. Chocolate appears when giftRevealStage >= 3 (click lần 3)
     const showChocolate = (hasReadLetter && isClimaxOrLater && giftRevealStage >= 3) && (visibleModels?.chocolate ?? true);
 
-    const hasTastedChocolate = useExperienceStore(s => s.hasTastedChocolate);
 
-    // FINAL CONVERGENCE STATE
-    const isFinalConvergence = currentScene === 'ending' && hasTastedChocolate;
+
+
+
+    // New model visibility based on scene progression
+    const isIntroOrLater = currentScene !== 'prelude';
+    const showCandles = isIntroOrLater && (visibleModels?.candles ?? true);
+    const showPetals = isFlowerOrLater && (visibleModels?.petals ?? true);
+    const showGiftBox = (isClimaxOrLater && giftRevealStage >= 1) && (visibleModels?.giftBox ?? true);
+    const showBalloons = (currentScene === 'ending') && (visibleModels?.balloons ?? true);
 
     const modelTransforms = useExperienceStore(s => s.modelTransforms);
 
@@ -75,22 +94,26 @@ export const VisualStoryScene: React.FC = React.memo(() => {
             // Lerp to the stored configuration
             const targetPos = new THREE.Vector3(...rose.position);
             roseGroup.current.position.lerp(targetPos, speed);
-
-            // Rotation is static from store unless special logic overrides
             roseGroup.current.rotation.set(rose.rotation[0], rose.rotation[1], rose.rotation[2]);
-            roseGroup.current.scale.setScalar(rose.scale);
+
+            // Visibility Check via Ref
+            const targetScale = showRoseRef.current ? rose.scale : 0;
+            const currentScale = roseGroup.current.scale.x;
+            const newScale = THREE.MathUtils.lerp(currentScale, targetScale, speed * 2);
+            roseGroup.current.scale.setScalar(newScale);
         }
 
         // ENVELOPE Target
         if (envelopeGroup.current) {
             const targetPos = new THREE.Vector3(...envelope.position);
             envelopeGroup.current.position.lerp(targetPos, speed);
-
-            // Auto rotate logic combined with stored rotation Y? 
-            // For now, let's honor store rotation primarily to allow debugging.
-            // If we want "Convergence" auto-rotate, we could blend it, but let's stick to manual control for now as requested.
             envelopeGroup.current.rotation.set(envelope.rotation[0], envelope.rotation[1], envelope.rotation[2]);
-            envelopeGroup.current.scale.setScalar(envelope.scale);
+
+            // Visibility Check via Ref (Fixes "Envelope shows immediately" bug)
+            const targetScale = showEnvelopeRef.current ? envelope.scale : 0;
+            const currentScale = envelopeGroup.current.scale.x;
+            const newScale = THREE.MathUtils.lerp(currentScale, targetScale, speed * 3);
+            envelopeGroup.current.scale.setScalar(newScale);
         }
     });
 
@@ -125,40 +148,36 @@ export const VisualStoryScene: React.FC = React.memo(() => {
             <FloatingHearts count={40} range={30} />
 
             {/* 1. CRYSTAL ROSE */}
-            {showRose && (
-                <group
-                    ref={roseGroup}
-                    position={[...modelTransforms.rose.position] as [number, number, number]}
-                    rotation={[...modelTransforms.rose.rotation] as [number, number, number]}
-                    scale={modelTransforms.rose.scale}
-                >
-                    <CrystalRose
-                        scale={1.0} // Scale handled by parent group now
-                        position={[0, 0, 0]}
-                        isBud={bloomProgress < 0.1 && (currentScene === 'prelude' || currentScene === 'intro')}
-                    />
-                </group>
-            )}
+            <group
+                ref={roseGroup}
+                position={[...modelTransforms.rose.position] as [number, number, number]}
+                rotation={[...modelTransforms.rose.rotation] as [number, number, number]}
+                scale={showRose ? modelTransforms.rose.scale : 0}
+            >
+                <CrystalRose
+                    scale={1.0}
+                    position={[0, 0, 0]}
+                    isBud={bloomProgress < 0.1 && (currentScene === 'prelude' || currentScene === 'intro')}
+                />
+            </group>
 
             {/* 2. LETTER ENVELOPE */}
-            {showEnvelope && (
-                <group
-                    ref={envelopeGroup}
-                    position={[...modelTransforms.envelope.position] as [number, number, number]}
-                    rotation={[...modelTransforms.envelope.rotation] as [number, number, number]}
-                    scale={modelTransforms.envelope.scale}
-                >
-                    <LetterEnvelope />
-                </group>
-            )}
+            <group
+                ref={envelopeGroup}
+                position={[...modelTransforms.envelope.position] as [number, number, number]}
+                rotation={[...modelTransforms.envelope.rotation] as [number, number, number]}
+                scale={showEnvelope ? modelTransforms.envelope.scale : 0}
+            >
+                <LetterEnvelope />
+            </group>
 
-            {/* 3. MEMORY PHOTO */}
+            {/* 3. MEMORY PHOTO - Pre-rendered via scale */}
             <group
                 position={[...modelTransforms.photo.position] as [number, number, number]}
                 rotation={[...modelTransforms.photo.rotation] as [number, number, number]}
-                scale={modelTransforms.photo.scale}
+                scale={showPhoto ? modelTransforms.photo.scale : 0}
             >
-                <MemoryGroup visible={showPhoto} isFinalMode={isFinalConvergence} />
+                <HangingPolaroids visible={true} />
             </group>
 
             {/* 4. CHOCOLATE CLUSTER */}
@@ -167,10 +186,12 @@ export const VisualStoryScene: React.FC = React.memo(() => {
                 rotation={[...modelTransforms.chocolate.rotation] as [number, number, number]}
                 scale={modelTransforms.chocolate.scale}
             >
-                <ChocolateCluster visible={showChocolate} />
+                <ChocolateCluster
+                    visible={showChocolate}
+                    ringTransform={modelTransforms.ring}
+                />
             </group>
 
-            {/* 5. MASCOT CHARACTER */}
             {/* 5. MASCOT CHARACTER */}
             <group
                 position={[...modelTransforms.mascot.position] as [number, number, number]}
@@ -180,7 +201,45 @@ export const VisualStoryScene: React.FC = React.memo(() => {
                 <primitive object={mascotScene} />
             </group>
 
-            {/* Soft ground shadow to give a unified contact shadow without many dynamic casters */}
+            {/* 6. CANDLE SET */}
+            <group
+                position={[...modelTransforms.candles.position] as [number, number, number]}
+                rotation={[...modelTransforms.candles.rotation] as [number, number, number]}
+                scale={showCandles ? modelTransforms.candles.scale : 0}
+            >
+                <CandleSet />
+            </group>
+
+            {/* 7. PETAL SCATTER */}
+            {showPetals && (
+                <group
+                    position={[...modelTransforms.petals.position] as [number, number, number]}
+                    rotation={[...modelTransforms.petals.rotation] as [number, number, number]}
+                    scale={modelTransforms.petals.scale}
+                >
+                    <PetalScatter count={25} />
+                </group>
+            )}
+
+            {/* 8. GIFT BOX */}
+            <group
+                position={[...modelTransforms.giftBox.position] as [number, number, number]}
+                rotation={[...modelTransforms.giftBox.rotation] as [number, number, number]}
+                scale={showGiftBox ? modelTransforms.giftBox.scale : 0}
+            >
+                <GiftBox />
+            </group>
+
+            {/* 9. HEART BALLOONS */}
+            <group
+                position={[...modelTransforms.balloons.position] as [number, number, number]}
+                rotation={[...modelTransforms.balloons.rotation] as [number, number, number]}
+                scale={showBalloons ? modelTransforms.balloons.scale : 0}
+            >
+                <HeartBalloons />
+            </group>
+
+            {/* Soft ground shadow */}
             <SoftGroundShadow />
         </group>
     );
@@ -189,3 +248,15 @@ VisualStoryScene.displayName = 'VisualStoryScene';
 
 // Preload the model to prevent stutter
 useGLTF.preload('/valentine/models/charator.glb');
+
+// Preload critical assets to prevent UI freeze
+if (typeof window !== 'undefined') {
+    const assetsToPreload = [
+        '/memory-first-meet.png',
+        '/promise-heart.png',
+    ];
+    assetsToPreload.forEach(src => {
+        const img = new Image();
+        img.src = src;
+    });
+}
