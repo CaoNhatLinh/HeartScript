@@ -1,0 +1,93 @@
+body {
+    --font-heart-display: var(--font-playfair);
+}
+
+.heart-glass-surface {
+    border: 1px solid var(--heart-glass-border, #fffcf4d9);
+    border-radius: var(--heart-glass-radius, 28px);
+    background: var(--heart-glass-fill, linear-gradient(145deg, #fffaf3c7, #fff3ed65));
+    box-shadow: var(--heart-glass-shadow, inset 0 1px 1px #ffffffb3, inset 0 -1px 1px #fdf0e788, 0 14px 38px #80576c1a);
+    -webkit-backdrop-filter: blur(var(--heart-glass-blur, 16px)) saturate(115%);
+    backdrop-filter: blur(var(--heart-glass-blur, 16px)) saturate(115%);
+}
+
+.heart-glass-crystal {
+    --heart-glass-fill: linear-gradient(145deg, #fff9f64f, #fffcfa17 54%, #f0d7e533);
+    --heart-glass-border: #fffaf5d6;
+    --heart-glass-blur: 14px;
+    --heart-glass-shadow:
+        inset 0 1px 2px #ffffffdb,
+        inset 0 -3px 5px #a65d7d26,
+        var(--heart-glass-drop, 0 3px 8px #6a3b5126, 0 25px 48px -16px #703d5750);
+    position: relative;
+    background-clip: padding-box;
+}
+
+@supports (mask-composite: exclude) {
+    .heart-glass-crystal::after {
+        position: absolute;
+        z-index: 2;
+        inset: 0;
+        padding: 1.5px;
+        border-radius: inherit;
+        background: linear-gradient(142deg, #fff 4%, #fffcf6e6 20%, #dea6bd64 38%, #fffcf560 54%, #fff 72%, #fffcf6bd 86%, #dba6c2a6);
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        pointer-events: none;
+        content: '';
+    }
+}
+
+.heart-glass-dock {
+    --heart-glass-fill: linear-gradient(155deg, #fffdf756, #faeaf03b);
+    --heart-glass-radius: 999px;
+    --heart-glass-drop: 0 2px 5px #6a3b512b, 0 12px 28px -6px #59314447;
+}
+
+.heart-glass-nav-item {
+    --glass-button-edge: #fff7f23b;
+    --glass-button-light: #fffaf325;
+    --glass-button-tint: #ebc8da1a;
+    --glass-button-cast: #60324e1c;
+}
+
+.heart-glass-profile-menu {
+    --heart-glass-radius: 22px;
+    --heart-glass-fill: linear-gradient(145deg, #49303eed, #2a1c2af2);
+    --heart-glass-border: #eac8d45e;
+    --heart-glass-shadow: inset 0 1px #fff6f34d, 0 18px 42px #3c233951;
+}
+
+.heart-glass-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding-inline: 7px;
+    border-radius: 12px;
+    color: #48303d;
+    font: 650 clamp(17px, 3.4vw, 23px)/1 var(--font-heart-display), Georgia, serif;
+    letter-spacing: -.035em;
+    transition: background-color .18s ease, box-shadow .18s ease;
+}
+
+.heart-glass-brand svg {
+    color: #a05d75;
+}
+
+.heart-glass-brand:focus-visible {
+    outline: 2px solid #914d69;
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+@media (hover: hover) {
+    .heart-glass-brand:hover {
+        background-color: #fff9f44f;
+        box-shadow: inset 0 1px 2px #fff8f4d9, 0 4px 12px #73475a21;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .heart-glass-brand { transition: none; }
+}

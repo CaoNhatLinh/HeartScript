@@ -60,6 +60,7 @@ export const TimelineBar: React.FC = () => {
           <button
             key={i}
             className="relative p-1"
+            data-valentine-control="plain"
             onMouseEnter={() => setHoveredStep(i)}
             onMouseLeave={() => setHoveredStep(null)}
           >

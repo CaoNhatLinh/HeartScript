@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { Outfit, Cormorant_Garamond, Playfair_Display, Quicksand, Dancing_Script } from "next/font/google";
+import { Outfit, Cormorant_Garamond, Playfair_Display, Quicksand, Dancing_Script, Manrope } from "next/font/google";
 import "./globals.css";
+import "./heart-glass.css";
+import "./heart-buttons.css";
+import "./heart-cursor.css";
 import AuthProvider from "@/components/providers/AuthProvider";
 
 const outfit = Outfit({
@@ -16,7 +19,7 @@ const cormorant = Cormorant_Garamond({
 });
 
 const playfair = Playfair_Display({
-    subsets: ["latin"],
+    subsets: ["latin", "vietnamese"],
     weight: ['400', '500', '600', '700', '800', '900'],
     variable: '--font-playfair',
     display: 'swap', // Prevent FOIT
@@ -36,6 +39,13 @@ const dancingScript = Dancing_Script({
     display: 'swap', // Prevent FOIT
 });
 
+const interfaceFont = Manrope({
+    variable: '--font-heart-ui',
+    subsets: ['latin', 'vietnamese'],
+    display: 'swap',
+    preload: false,
+});
+
 export const metadata: Metadata = {
     title: "Our Love Space",
     description: "A private space for us to share memories and build our future.",
@@ -48,7 +58,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-            <body className={`${outfit.variable} ${cormorant.variable} ${playfair.variable} ${quicksand.variable} ${dancingScript.variable} font-sans antialiased`} suppressHydrationWarning={true}>
+            <body className={`${outfit.variable} ${cormorant.variable} ${playfair.variable} ${quicksand.variable} ${dancingScript.variable} ${interfaceFont.variable} font-sans antialiased`} suppressHydrationWarning={true}>
                 <AuthProvider>
                     {children}
                 </AuthProvider>

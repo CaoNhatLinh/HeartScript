@@ -164,7 +164,7 @@ export const LetterEnvelope: React.FC = () => {
         <group
             ref={groupRef}
             onPointerOver={() => { setHovered(true); document.body.style.cursor = 'grab'; }}
-            onPointerOut={() => { setHovered(false); setIsHolding(false); setIsInspecting(false); document.body.style.cursor = 'auto'; }}
+            onPointerOut={() => { setHovered(false); setIsHolding(false); setIsInspecting(false); document.body.style.removeProperty('cursor'); }}
             onPointerDown={(e) => {
                 e.stopPropagation();
                 setIsHolding(true);

@@ -385,7 +385,8 @@ const ChocolateClusterLogic: React.FC<{ visible: boolean, markTasted: () => void
     useFrame((state, delta) => {
         if (!groupRef.current) return;
         const time = state.clock.elapsedTime;
-        document.body.style.cursor = hovered ? 'pointer' : 'auto';
+        if (hovered) document.body.style.cursor = 'var(--heart-cursor-action, pointer)';
+        else document.body.style.removeProperty('cursor');
 
         // Visibility Transition Logic
         const targetScale = visible ? 1 : 0;

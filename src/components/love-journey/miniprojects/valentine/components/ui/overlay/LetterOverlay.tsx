@@ -235,20 +235,16 @@ export const LetterOverlay: React.FC = () => {
                         <button
                             onClick={handleClose}
                             aria-label="Đóng lá thư"
+                            data-valentine-palette="paper"
                             style={{
                                 position: 'absolute',
                                 top: '15px',
                                 right: '15px',
-                                background: 'transparent',
-                                border: 'none',
                                 width: '30px', height: '30px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 fontSize: '24px',
-                                cursor: 'pointer', color: '#8a001a', opacity: 0.5,
-                                transition: 'opacity 0.2s',
+                                color: '#8a001a',
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                            onMouseLeave={(e) => e.currentTarget.style.opacity = '0.5'}
                         >✕</button>
 
                         <div style={{
@@ -365,33 +361,17 @@ export const LetterOverlay: React.FC = () => {
                             requestAnimationFrame(() => requestTransition('climax'));
                         }}
                         aria-label="Khám phá điều bất ngờ tiếp theo"
-                        className="group"
+                        className="group border border-pink-200/30 motion-safe:hover:-translate-y-0.5"
                         style={{
                             display: 'flex',
                             alignItems: 'center',
                             gap: '12px',
                             padding: '16px 32px',
-                            background: 'rgba(255, 255, 255, 0.15)',
-                            backdropFilter: 'blur(12px)',
-                            border: '1px solid rgba(255, 255, 255, 0.4)',
                             borderRadius: '100px',
                             color: 'white',
                             fontSize: '18px',
                             fontFamily: "'Dancing Script', serif",
                             fontWeight: 'bold',
-                            cursor: 'pointer',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                            transition: 'all 0.3s ease',
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.25)';
-                            e.currentTarget.style.transform = 'translateY(-3px)';
-                            e.currentTarget.style.boxShadow = '0 15px 40px rgba(255, 50, 100, 0.4)';
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
                         }}
                     >
                         <span>Khám phá điều bất ngờ tiếp theo</span>

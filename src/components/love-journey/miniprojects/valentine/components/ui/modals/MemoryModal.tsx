@@ -165,19 +165,16 @@ export const MemoryModal: React.FC = () => {
                 </div>
 
                 {/* Kawaii Button */}
-                <motion.button
+                <button
+                  type="button"
                   onClick={handleContinue}
-                  className="mt-8 group relative px-8 py-3 bg-gradient-to-r from-pink-400 to-rose-400 hover:from-pink-500 hover:to-rose-500 text-white rounded-full shadow-[0_8px_20px_-5px_rgba(244,114,182,0.5)] transition-all overflow-hidden"
-                  whileHover={{ scale: 1.05, y: -2 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="heart-glass-button mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3 font-bold tracking-wide"
+                  data-glass-variant="primary"
+                  data-valentine-control="plain"
                 >
-                  <span className="relative z-10 flex items-center gap-2 font-bold tracking-wide">
-                    Tiếp Tục Nè
-                    <Heart size={18} className="fill-white animate-pulse" />
-                  </span>
-                  {/* Shine */}
-                  <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
-                </motion.button>
+                  Tiếp Tục Nè
+                  <Heart size={18} className="fill-current animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+                </button>
 
               </div>
             </div>

@@ -143,7 +143,8 @@ export const PhoneIntro: React.FC = () => {
                                     setIsPlaying(true);
                                     setIntroPhase('phone-passcode');
                                 }}
-                                className="absolute bottom-40 left-4 right-4 bg-white/10 backdrop-blur-xl rounded-[28px] p-4 border border-white/20 shadow-2xl cursor-pointer pointer-events-auto"
+                                data-valentine-control="face"
+                                className="absolute bottom-40 left-4 right-4 backdrop-blur-xl rounded-[28px] p-4 border border-pink-200/25 shadow-2xl cursor-pointer pointer-events-auto"
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#0084FF] to-[#00C6FF] flex items-center justify-center shadow-lg">
@@ -163,10 +164,10 @@ export const PhoneIntro: React.FC = () => {
 
                             {/* Bottom Controls */}
                             <div className="absolute bottom-12 left-8 right-8 flex justify-between">
-                                <button className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                                <button className="w-12 h-12 rounded-full flex items-center justify-center text-white">
                                     <Flashlight size={20} />
                                 </button>
-                                <button className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+                                <button className="w-12 h-12 rounded-full flex items-center justify-center text-white">
                                     <Camera size={20} />
                                 </button>
                             </div>
@@ -209,9 +210,9 @@ export const PhoneIntro: React.FC = () => {
                                         val ? (
                                             <motion.button
                                                 key={i}
-                                                whileTap={{ scale: 0.9, backgroundColor: 'rgba(255,255,255,0.4)' }}
+                                                whileTap={{ scale: 0.96 }}
                                                 onClick={() => handleKeyClick(val)}
-                                                className="w-18 h-18 rounded-full bg-white/10 text-white text-3xl font-light flex flex-col items-center justify-center border border-white/5"
+                                                className="w-18 h-18 rounded-full text-white text-3xl font-light flex flex-col items-center justify-center border border-pink-200/20"
                                             >
                                                 {val}
                                             </motion.button>
@@ -224,7 +225,7 @@ export const PhoneIntro: React.FC = () => {
                                         setPasscode('');
                                         setIntroPhase('phone-lock');
                                     }}
-                                    className="mt-12 text-white/80 hover:text-white transition-colors"
+                                    className="mt-12 px-3 py-1 text-white/80 hover:text-white"
                                 >
                                     Hủy
                                 </button>

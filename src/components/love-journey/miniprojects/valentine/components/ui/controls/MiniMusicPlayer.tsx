@@ -106,7 +106,7 @@ export const MiniMusicPlayer: React.FC = () => {
                 <motion.div
                     animate={{ width: isExpanded ? 340 : 200 }}
                     transition={{ type: 'spring', damping: 20, stiffness: 200 }}
-                    className="relative bg-white/10 backdrop-blur-2xl rounded-[24px] border border-white/30 shadow-[0_10px_40px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden transition-colors hover:bg-white/15"
+                    className="relative bg-white/10 backdrop-blur-2xl rounded-[24px] border border-white/30 shadow-[0_10px_40px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden"
                 >
                     {/* Top Section: Main Controls & Info */}
                     <div className="flex items-center p-2.5 gap-3">
@@ -163,13 +163,13 @@ export const MiniMusicPlayer: React.FC = () => {
                         <div className="flex items-center gap-0.5 pr-1">
                             {isExpanded && (
                                 <>
-                                    <button onClick={() => previousTrack()} className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                    <button onClick={() => previousTrack()} className="p-1.5 text-white/70 hover:text-white rounded-full">
                                         <SkipBack size={14} />
                                     </button>
-                                    <button onClick={handleTogglePlay} className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                    <button onClick={handleTogglePlay} className="p-1.5 text-white/70 hover:text-white rounded-full">
                                         {isPlaying ? <Pause size={14} fill="currentColor" /> : <Play size={14} fill="currentColor" className="ml-0.5" />}
                                     </button>
-                                    <button onClick={() => nextTrack()} className="p-1.5 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors">
+                                    <button onClick={() => nextTrack()} className="p-1.5 text-white/70 hover:text-white rounded-full">
                                         <SkipForward size={14} />
                                     </button>
                                 </>

@@ -1,0 +1,22 @@
+@media (hover: hover) and (pointer: fine) {
+    html {
+        --heart-cursor-action: url('/heart-glass/cursor-strawberry-hand.svg') 12 3, pointer;
+        cursor: url('/heart-glass/cursor-strawberry.svg') 8 7, default;
+    }
+
+    :is(a[href], button, summary, [role='button'], [role='link'], label[for], label:has(> input:not(:disabled)), .cursor-pointer,
+        input:is([type='button'], [type='submit'], [type='reset'], [type='checkbox'], [type='radio'], [type='color'], [type='file'])):not(
+        :disabled, [aria-disabled='true'], .cursor-grab, .cursor-grabbing, .cursor-move, .cursor-text, .cursor-none, .cursor-not-allowed
+    ) {
+        cursor: var(--heart-cursor-action);
+    }
+
+    :where(input:not([type]), input:is([type='text'], [type='search'], [type='email'], [type='password'], [type='tel'], [type='url'], [type='number']),
+        textarea, [contenteditable]:not([contenteditable='false'])):not(:disabled, [aria-disabled='true']) {
+        cursor: text;
+    }
+
+    :where(button, input, select, textarea, [role='button'], a[href]):where(:disabled, [aria-disabled='true']) {
+        cursor: not-allowed;
+    }
+}

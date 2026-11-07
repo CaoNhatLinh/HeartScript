@@ -2,7 +2,8 @@
 
 import { differenceInCalendarDays, format, intervalToDuration, isValid, parseISO } from 'date-fns';
 import { onValue, ref, set } from 'firebase/database';
-import { ArrowRight, Check, Heart, Loader2, Settings, Sparkle, X } from 'lucide-react';
+import { ArrowRight, CalendarDays, Check, Heart, Loader2, Settings, Sparkle, X } from 'lucide-react';
+import Image from 'next/image';
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,6 +33,7 @@ export function WelcomeSection() {
     const [isEditing, setIsEditing] = useState(false);
     const [saving, setSaving] = useState(false);
     const [saveFailed, setSaveFailed] = useState(false);
+    const [artUnavailable, setArtUnavailable] = useState(false);
 
     useEffect(() => {
         const unsubscribe = onValue(ref(rtdb, 'settings/loveStartDate'), snapshot => {
@@ -49,7 +51,7 @@ export function WelcomeSection() {
     const end = parseISO(today);
     const canCount = start !== null && start <= end;
     const duration = canCount ? intervalToDuration({ start, end }) : {};
-    const totalDays = canCount ? differenceInCalendarDays(end, start) + 1 : 0;
+    const totalDays = canCount ? differenceInCalendarDays(end, start) + 1 : null;
     const periods = [
         { label: 'Năm', amount: duration.years ?? 0 },
         { label: 'Tháng', amount: duration.months ?? 0 },
@@ -82,9 +84,10 @@ export function WelcomeSection() {
             <div className={styles.setting}>
                 <button
                     type="button"
-                    className={styles.settingsButton}
+                    className={`heart-glass-button ${styles.settingsButton}`}
                     aria-label="Chỉnh ngày bắt đầu"
                     aria-expanded={isEditing}
+                    aria-controls={isEditing ? 'love-date-form' : undefined}
                     onClick={() => {
                         setDraft(startDate ?? '');
                         setSaveFailed(false);
@@ -94,7 +97,7 @@ export function WelcomeSection() {
                     <Settings size={18} strokeWidth={1.65} aria-hidden="true" />
                 </button>
                 {isEditing && (
-                    <form className={styles.dateForm} onSubmit={saveDate}>
+                    <form id="love-date-form" className={`heart-glass-surface ${styles.dateForm}`} onSubmit={saveDate}>
                         <label htmlFor="love-start-date">Ngày bắt đầu</label>
                         <div>
                             <Input id="love-start-date" type="date" value={draft} onChange={event => setDraft(event.target.value)} required />
@@ -110,36 +113,52 @@ export function WelcomeSection() {
                 )}
             </div>
 
-            <div className={styles.story}>
+            <div className={`heart-glass-surface heart-glass-crystal ${styles.story}`}>
                 <div className={styles.emblem} aria-hidden="true">
-                    <Sparkle className={styles.sparkLeft} size={17} strokeWidth={1.4} />
-                    <Heart className={styles.heart} size={30} strokeWidth={1.35} />
-                    <Sparkle className={styles.sparkRight} size={13} strokeWidth={1.4} />
+                    <Sparkle className={styles.sparkLeft} size={17} strokeWidth={1.35} />
+                    {artUnavailable ? (
+                        <Heart className={styles.heartFallback} strokeWidth={1.15} />
+                    ) : (
+                        <Image
+                            className={styles.heart}
+                            src="/heart-glass/heart.webp"
+                            alt=""
+                            width={864}
+                            height={864}
+                            sizes="(max-width: 1000px) 34vw, 380px"
+                            preload
+                            onError={() => setArtUnavailable(true)}
+                        />
+                    )}
+                    <Sparkle className={styles.sparkRight} size={13} strokeWidth={1.35} />
                 </div>
-                <div className={styles.heading}>
-                    <p>Nhật ký hai đứa</p>
-                    <h1 id="together-title">Bên <em>nhau</em></h1>
+                <h1 id="together-title" className={styles.counter}>
+                    <strong>{totalDays?.toLocaleString('vi-VN') ?? '—'}</strong>
+                    <em>ngày bên nhau</em>
+                </h1>
+
+                <div className={styles.details}>
+                    <div className={styles.timeline}>
+                        <dl className={styles.periods} aria-label="Thời gian bên nhau">
+                            {periods.map(({ label, amount }) => (
+                                <div key={label}>
+                                    <dt>{label}</dt>
+                                    <dd>{canCount ? amount : '—'}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                        {start && startDate && (
+                            <p className={styles.since}>
+                                <CalendarDays size={17} strokeWidth={1.55} aria-hidden="true" />
+                                <span className="sr-only">Từ ngày</span>
+                                <time dateTime={startDate}>{format(start, 'dd.MM.yyyy')}</time>
+                            </p>
+                        )}
+                    </div>
+                    <button type="button" className={`heart-glass-button ${styles.explore}`} data-glass-variant="primary" onClick={explore}>
+                        Khám phá tiếp <ArrowRight size={17} strokeWidth={1.7} aria-hidden="true" />
+                    </button>
                 </div>
-
-                <dl className={styles.periods} aria-label="Thời gian bên nhau">
-                    {periods.map(({ label, amount }) => (
-                        <div key={label}>
-                            <dt>{label}</dt>
-                            <dd>{startDate ? String(amount).padStart(2, '0') : '—'}</dd>
-                        </div>
-                    ))}
-                </dl>
-
-                {start && startDate && (
-                    <p className={styles.since}>
-                        Từ <time dateTime={startDate}>{format(start, 'dd.MM.yyyy')}</time>
-                        <span aria-hidden="true">·</span>
-                        <span><strong>{totalDays.toLocaleString('vi-VN')}</strong> ngày bên nhau</span>
-                    </p>
-                )}
-                <button type="button" className={styles.explore} onClick={explore}>
-                    Khám phá tiếp <ArrowRight size={16} aria-hidden="true" />
-                </button>
             </div>
         </section>
     );

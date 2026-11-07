@@ -4,8 +4,8 @@ export const birthdayChapters = [
     {
         id: 'cake',
         label: 'Điều ước',
-        title: ['Một ngày,', 'có em.'],
-        description: 'Sinh nhật vui vẻ nha. Ước một điều rồi thổi nến nhé.',
+        title: ['Sinh nhật', 'vui vẻ nha'],
+        description: null,
     },
     {
         id: 'frame',
@@ -25,19 +25,22 @@ export type BirthdaySceneId = typeof birthdayChapters[number]['id'];
 
 export const birthdayMemories = [
     {
-        image: '/memory-first-meet.png',
-        alt: 'Hai đứa chụp ảnh cùng nhau, em giơ tay tạo dáng',
+        image: '/miniproject/birthday-3d/memory/first',
+        alt: 'Em đeo kính và tựa má lên tay',
         frame: 'brass',
+        focusX: 0.5,
     },
     {
         image: '/valentine/img/z7133499668854_9b365372d9134ee097cb79f5f7a4844c.jpg',
         alt: 'Em ngồi cạnh một luống hoa',
         frame: 'ribbon',
+        focusX: 0.5,
     },
     {
-        image: '/valentine/img/z7531538979814_f4dafc6311426dff9f5a08e3c7ae37c2.jpg',
-        alt: 'Em cầm bó hoa tulip trắng',
+        image: '/miniproject/birthday-3d/memory/third',
+        alt: 'Em đeo kính và giơ hai ngón tay tạo dáng',
         frame: 'oval',
+        focusX: 0.86,
     },
 ] as const;
 

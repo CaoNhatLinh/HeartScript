@@ -434,7 +434,7 @@ export const CrystalRose: React.FC<{
                     setRoseHover(false);
                     setIsHolding(false);
                     setIsInspecting(false);
-                    document.body.style.cursor = 'auto';
+                    document.body.style.removeProperty('cursor');
                 }}
                 onPointerDown={(e: ThreeEvent<PointerEvent>) => {
                     e.stopPropagation();

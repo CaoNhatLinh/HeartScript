@@ -76,7 +76,7 @@ export const FrameSelector: React.FC = () => {
             {/* Toggle Button */}
             <button
                 onClick={() => setFrameSelectorOpen(!isFrameSelectorOpen)}
-                className={`p-3 rounded-full transition-all shadow-lg border backdrop-blur-md ${isFrameSelectorOpen ? 'bg-pink-500 text-white border-pink-400' : 'bg-white/10 text-white/90 border-white/10 hover:bg-white/20'}`}
+                className={`p-3 rounded-full border ${isFrameSelectorOpen ? 'bg-pink-500 text-white border-pink-400' : 'text-white/90 border-pink-200/20'}`}
                 title="Choose Frame"
                 aria-label={isFrameSelectorOpen ? 'Đóng chọn khung' : 'Chọn khung viền'}
                 aria-expanded={isFrameSelectorOpen}
@@ -107,7 +107,7 @@ export const FrameSelector: React.FC = () => {
                                 aria-label="Xóa khung viền"
                                 className={`
                                     relative group flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all
-                                    ${!frameVisible ? 'ring-2 ring-white/40 ring-offset-2 ring-offset-black/80' : 'hover:bg-white/10'}
+                                    ${!frameVisible ? 'ring-2 ring-white/40 ring-offset-2 ring-offset-black/80' : ''}
                                 `}
                             >
                                 <div className="w-16 h-16 rounded-lg overflow-hidden shadow-lg relative border-2 border-dashed border-white/20 flex items-center justify-center bg-white/5">
@@ -133,10 +133,7 @@ export const FrameSelector: React.FC = () => {
                                         aria-pressed={isSelected}
                                         className={`
                                             relative group flex flex-col items-center gap-1.5 p-2 rounded-lg transition-all
-                                            ${isSelected
-                                                ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-black/80'
-                                                : 'hover:bg-white/10'
-                                            }
+                                            ${isSelected ? 'ring-2 ring-pink-500 ring-offset-2 ring-offset-black/80' : ''}
                                         `}
                                     >
                                         {/* Preview Thumbnail */}
@@ -156,7 +153,7 @@ export const FrameSelector: React.FC = () => {
                                             </div>
 
                                             {/* Hover effect */}
-                                            <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors" />
+                                            <div className="absolute inset-0 group-hover:bg-pink-300/10 transition-colors" />
 
                                             {/* Selected checkmark */}
                                             {isSelected && (

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo, memo, useCallback } from 'react';
-import { motion } from 'framer-motion';
+import { useReducedMotion } from 'framer-motion';
 import { push, ref, set, update, query, limitToLast, orderByChild, serverTimestamp, onValue, DatabaseReference } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -14,6 +14,7 @@ import {
     PenLine,
     Send,
     BookHeart,
+    Mail,
     ChevronRight,
     Paperclip,
     X,
@@ -39,10 +40,10 @@ import { format } from 'date-fns';
 import Image from 'next/image';
 import { detectMood, MOODS, MoodType } from '@/lib/love-config';
 import { Sun, CloudRain, Heart as HeartIcon, Cloud as CloudIcon } from 'lucide-react';
+import styles from './keepsakes.module.css';
 
 const LetterSkeleton = () => (
     <div className="relative bg-[#fffbf0]/50 rounded-sm p-6 shadow-sm border border-[#f0ebe0] overflow-hidden animate-pulse">
-        <div className="absolute inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none" />
         <div className="relative z-10 flex flex-col h-full gap-4">
             <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
@@ -68,8 +69,10 @@ const LetterSkeleton = () => (
 );
 
 const MoodAtmosphere = memo(({ mood }: { mood: MoodType }) => {
+    const reduceMotion = useReducedMotion();
+
     // Love Particles (Memoized - stable random values via useMemo)
-    const loveParticles = useMemo(() => [...Array(15)].map((_, i) => ({ // eslint-disable-line
+    const loveParticles = useMemo(() => [...Array(15)].map((_, i) => ({
         id: i,
         left: Math.random() * 90 + 5, // eslint-disable-line
         duration: 15 + Math.random() * 10, // eslint-disable-line
@@ -81,7 +84,7 @@ const MoodAtmosphere = memo(({ mood }: { mood: MoodType }) => {
     })), []);
 
     // Sad Particles (Memoized - stable random values via useMemo)
-    const sadParticles = useMemo(() => [...Array(40)].map((_, i) => ({ // eslint-disable-line
+    const sadParticles = useMemo(() => [...Array(40)].map((_, i) => ({
         id: i,
         left: Math.random() * 100, // eslint-disable-line
         duration: 0.8 + Math.random() * 0.5, // eslint-disable-line
@@ -91,7 +94,7 @@ const MoodAtmosphere = memo(({ mood }: { mood: MoodType }) => {
     })), []);
 
     // Happy Particles (Memoized - stable random values via useMemo)
-    const happyParticles = useMemo(() => [...Array(8)].map((_, i) => ({ // eslint-disable-line
+    const happyParticles = useMemo(() => [...Array(8)].map((_, i) => ({
         id: i,
         left: Math.random() * 90 + 5, // eslint-disable-line
         top: Math.random() * 80 + 10, // eslint-disable-line
@@ -102,7 +105,7 @@ const MoodAtmosphere = memo(({ mood }: { mood: MoodType }) => {
     })), []);
 
     // Calm Particles (Memoized - stable random values via useMemo)
-    const calmParticles = useMemo(() => [...Array(5)].map((_, i) => ({ // eslint-disable-line
+    const calmParticles = useMemo(() => [...Array(5)].map((_, i) => ({
         id: i,
         top: 10 + Math.random() * 60, // eslint-disable-line
         duration: 40 + Math.random() * 20, // eslint-disable-line
@@ -111,6 +114,8 @@ const MoodAtmosphere = memo(({ mood }: { mood: MoodType }) => {
         blur: Math.random() > 0.5 ? 'blur-sm' : 'blur-none', // eslint-disable-line
         opacity: 0.3 + Math.random() * 0.2 // eslint-disable-line
     })), []);
+
+    if (reduceMotion) return null;
 
     if (mood === 'love') {
         return (
@@ -592,62 +597,24 @@ export function DiarySection() {
 
     const isHim = (email?: string | null) => email && HIM_EMAILS.includes(email);
 
-    // Determine background mood:
-    // 1. If viewing an entry (selectedEntry), use its mood.
-    // 2. If writing/editing (isWriting), use the current detected mood.
-    // 3. Otherwise (List View), default to 'love' for a romantic atmosphere.
-    const activeMood = useMemo(() => {
-        if (selectedEntry) return selectedEntry.mood || 'love';
-        if (isWriting) return currentMood !== 'default' ? currentMood : 'love';
-        return 'love';
-    }, [selectedEntry, isWriting, currentMood]);
-
     return (
-        <section className="h-dvh w-screen flex flex-col relative overflow-hidden bg-[#faf9f6] snap-start shrink-0" suppressHydrationWarning>
-            {/* Load Fonts */}
-            <style jsx global>{`
-                @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Playwrite+IN+Guides&family=Playwrite+NZ+Basic+Guides&display=swap');
-            `}</style>
+        <section className={cn(styles.page, styles.journal, 'snap-start shrink-0')}>
+            <div className={styles.inner}>
+                <header className={styles.header}>
+                    <h2 className={styles.heading}>
+                        Our Journal
+                    </h2>
 
-            {/* Background Style */}
-            <div className="absolute inset-0 opacity-[0.6] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')]" />
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-rose-100/30 blur-[120px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-100/30 blur-[120px] rounded-full pointer-events-none" />
-            {/* Dynamic Atmosphere */}
-            <MoodAtmosphere mood={activeMood} />
-
-            <div className="h-full min-h-0 w-full max-w-4xl mx-auto px-4 pt-14 sm:px-8 sm:pt-10 flex flex-col relative z-10">
-                {/* Header Section */}
-                <div className="mb-4 sm:mb-6 shrink-0">
-                    <div className="flex flex-col items-center text-center mb-3 sm:mb-6">
-                        <div className="relative">
-                            <h2 className="text-4xl sm:text-6xl font-['Dancing_Script'] font-bold text-stone-800 flex items-center gap-2 sm:gap-4 justify-center drop-shadow-sm">
-                                <span className="text-rose-400">Our</span> Journal
-                            </h2>
-                            <div className="absolute -top-3 -right-5 sm:-top-6 sm:-right-8 opacity-20 rotate-12 pointer-events-none">
-                                <Heart className="size-10 sm:size-16 text-rose-500 fill-rose-500" />
-                            </div>
-                        </div>
-                        <p className="text-stone-600 font-['Patrick_Hand'] text-sm sm:text-xl mt-2 tracking-wide">
-                            Gửi những yêu thương vào từng trang giấy...
-                        </p>
-                    </div>
-
-                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 items-center">
-                        {/* Only HIM can see the Trash Can */}
+                    <div className={styles.actions}>
                         {isHim(user?.email) && (
                             <Button
-                                variant="ghost"
+                                variant="outline"
+                                aria-pressed={showDeletedLogs}
                                 onClick={() => setShowDeletedLogs(!showDeletedLogs)}
-                                className={cn(
-                                    "h-11 rounded-full font-['Montserrat'] text-[11px] sm:text-xs uppercase tracking-wide px-3 sm:px-6 transition-all",
-                                    showDeletedLogs
-                                        ? "bg-red-100 text-red-500 hover:bg-red-200"
-                                        : "text-stone-500 hover:text-stone-700 hover:bg-stone-100"
-                                )}
+                                className={styles.quietButton}
                             >
-                                <History className="w-4 h-4 mr-2" />
-                                {showDeletedLogs ? 'Back to Journal' : 'Trash Can'}
+                                <History className="size-4" aria-hidden="true" />
+                                {showDeletedLogs ? 'Nhật ký' : 'Thùng rác'}
                             </Button>
                         )}
 
@@ -655,44 +622,48 @@ export function DiarySection() {
                             <DialogTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className="size-11 rounded-full border-stone-200 text-stone-500 hover:text-stone-800 hover:border-stone-400 hover:bg-white bg-white/50 backdrop-blur-sm p-0 shadow-sm transition-all group"
-                                    aria-label="Couple Settings"
+                                    className={cn(styles.quietButton, 'size-11 p-0')}
+                                    aria-label="Cài đặt Nhật ký"
                                 >
-                                    <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
+                                    <Settings className="size-4" aria-hidden="true" />
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[500px] bg-[#fffbf0] border-none font-serif max-h-[90dvh] overflow-y-auto rounded-xl">
-                                <DialogTitle className="font-['Playfair_Display'] text-3xl mb-2 text-stone-800 text-center">
-                                    Our Little Settings
+                            <DialogContent className={cn('heart-glass-surface w-[calc(100%-1.5rem)] sm:max-w-[500px] max-h-[90dvh] overflow-y-auto', styles.dialog)}>
+                                <DialogTitle className="[font-family:var(--font-heart-display)] text-3xl mb-2 text-stone-800 text-center">
+                                    Cài đặt nhật ký
                                 </DialogTitle>
-                                <DialogDescription className="font-['Patrick_Hand'] text-xl text-stone-500 mb-8 text-center">
-                                    Tùy chỉnh không gian riêng của chúng mình...
+                                <DialogDescription className="sr-only">
+                                    Đổi tên và ảnh đại diện trong nhật ký.
                                 </DialogDescription>
 
                                 <div className="space-y-8">
                                     {/* HIM SETTINGS */}
                                     <div className="bg-blue-50/50 p-6 rounded-2xl border border-blue-100">
                                         <div className="flex items-center gap-4 mb-4">
-                                            <div className="relative group cursor-pointer" onClick={() => { setIsUploadingAvatar('him'); avatarInputRef.current?.click(); }}>
-                                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-200 shadow-sm bg-white">
+                                            <button
+                                                type="button"
+                                                aria-label="Đổi ảnh đại diện của Anh"
+                                                className={cn('heart-glass-button', styles.avatarPicker)}
+                                                onClick={() => {
+                                                    setIsUploadingAvatar('him');
+                                                    avatarInputRef.current?.click();
+                                                }}
+                                            >
+                                                <span className={styles.avatarPickerPhoto} data-him="true">
                                                     {tempAvatars.him ? (
-                                                        <Image src={tempAvatars.him} alt="Him" fill className="object-cover" />
+                                                        <Image src={tempAvatars.him} alt="" fill sizes="64px" className="object-cover" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-blue-50 text-blue-300">
-                                                            <ImageIcon className="w-6 h-6" />
-                                                        </div>
+                                                        <ImageIcon className="size-6" aria-hidden="true" />
                                                     )}
-                                                </div>
-                                                <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Upload className="w-4 h-4 text-white" />
-                                                </div>
-                                            </div>
+                                                </span>
+                                                <span className={styles.avatarPickerMark} aria-hidden="true"><Upload size={12} /></span>
+                                            </button>
                                             <div className="flex-1">
                                                 <label className="text-xs font-bold uppercase tracking-widest text-blue-400 mb-1 block">Display Name (Him)</label>
                                                 <input
                                                     value={tempNames.him}
                                                     onChange={(e) => setTempNames({ ...tempNames, him: e.target.value })}
-                                                    className="w-full bg-white border border-blue-100 rounded-lg p-3 font-['Dancing_Script'] text-2xl text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
+                                                    className="w-full bg-white border border-blue-100 rounded-lg p-3 [font-family:var(--font-dancing)] text-2xl text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-100"
                                                     placeholder="Biệt danh cho Anh..."
                                                 />
                                             </div>
@@ -702,26 +673,30 @@ export function DiarySection() {
                                     {/* HER SETTINGS */}
                                     <div className="bg-rose-50/50 p-6 rounded-2xl border border-rose-100">
                                         <div className="flex items-center gap-4 mb-4">
-                                            <div className="relative group cursor-pointer" onClick={() => { setIsUploadingAvatar('her'); avatarInputRef.current?.click(); }}>
-                                                <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-rose-200 shadow-sm bg-white">
+                                            <button
+                                                type="button"
+                                                aria-label="Đổi ảnh đại diện của Em"
+                                                className={cn('heart-glass-button', styles.avatarPicker)}
+                                                onClick={() => {
+                                                    setIsUploadingAvatar('her');
+                                                    avatarInputRef.current?.click();
+                                                }}
+                                            >
+                                                <span className={styles.avatarPickerPhoto}>
                                                     {tempAvatars.her ? (
-                                                        <Image src={tempAvatars.her} alt="Her" fill className="object-cover" />
+                                                        <Image src={tempAvatars.her} alt="" fill sizes="64px" className="object-cover" />
                                                     ) : (
-                                                        <div className="w-full h-full flex items-center justify-center bg-rose-50 text-rose-300">
-                                                            <ImageIcon className="w-6 h-6" />
-                                                        </div>
+                                                        <ImageIcon className="size-6" aria-hidden="true" />
                                                     )}
-                                                </div>
-                                                <div className="absolute inset-0 bg-black/20 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Upload className="w-4 h-4 text-white" />
-                                                </div>
-                                            </div>
+                                                </span>
+                                                <span className={styles.avatarPickerMark} aria-hidden="true"><Upload size={12} /></span>
+                                            </button>
                                             <div className="flex-1">
                                                 <label className="text-xs font-bold uppercase tracking-widest text-rose-400 mb-1 block">Display Name (Her)</label>
                                                 <input
                                                     value={tempNames.her}
                                                     onChange={(e) => setTempNames({ ...tempNames, her: e.target.value })}
-                                                    className="w-full bg-white border border-rose-100 rounded-lg p-3 font-['Dancing_Script'] text-2xl text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-100"
+                                                    className="w-full bg-white border border-rose-100 rounded-lg p-3 [font-family:var(--font-dancing)] text-2xl text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-100"
                                                     placeholder="Biệt danh cho Em..."
                                                 />
                                             </div>
@@ -736,8 +711,8 @@ export function DiarySection() {
                                         onChange={handleAvatarUpload}
                                     />
 
-                                    <Button onClick={saveSettings} className="w-full bg-stone-800 text-white hover:bg-black rounded-xl py-6 font-['Montserrat'] font-bold text-xs uppercase tracking-widest shadow-lg shadow-stone-200">
-                                        Save Everything
+                                    <Button onClick={saveSettings} className={cn(styles.primary, 'w-full')}>
+                                        Lưu cài đặt
                                     </Button>
                                 </div>
                             </DialogContent>
@@ -745,33 +720,29 @@ export function DiarySection() {
 
                         <Dialog open={isWriting} onOpenChange={(open) => open ? setIsWriting(true) : handleCloseWrite()}>
                             <DialogTrigger asChild>
-                                <Button className="relative overflow-hidden rounded-full bg-stone-800 text-[#fffcf5] hover:bg-stone-900 font-['Playfair_Display'] px-4 sm:px-9 h-11 sm:h-12 text-sm sm:text-lg shadow-xl shadow-stone-200 transition-all active:scale-95 group">
-                                    <span className="relative z-10 flex items-center">
-                                        <PenLine className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
-                                        {editingId ? "Update Love Letter" : "Write a Love Letter"}
-                                    </span>
-                                    <div className="absolute inset-0 bg-gradient-to-r from-stone-700 to-stone-900 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                <Button className={styles.primary}>
+                                    <PenLine className="size-4" aria-hidden="true" />
+                                    {editingId ? 'Sửa thư' : 'Viết thư'}
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-3xl bg-[#fffbf0] border-none rounded-xl shadow-2xl p-0 overflow-hidden max-h-[90dvh] flex flex-col font-serif">
+                            <DialogContent className={cn('heart-glass-surface w-[calc(100%-1.5rem)] sm:max-w-3xl p-0 overflow-hidden max-h-[90dvh] flex flex-col', styles.dialog)}>
                                 {/* Header */}
-                                <div className="bg-[#fff9e6] px-4 sm:px-8 pr-14 sm:pr-16 py-4 sm:py-6 border-b border-[#e6e2d1] flex items-center justify-between relative overflow-hidden">
-                                    <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]" />
+                                <div className={cn('px-4 sm:px-8 pr-14 sm:pr-16 py-4 sm:py-6 border-b flex items-center justify-between relative overflow-hidden', styles.dialogBand)}>
                                     <div>
-                                        <DialogTitle className="font-['Playfair_Display'] text-3xl text-stone-800 italic flex items-center gap-3">
-                                            Dear My Love... <Heart className="w-5 h-5 text-rose-400 fill-rose-400 animate-pulse" />
+                                        <DialogTitle className="[font-family:var(--font-heart-display)] text-3xl text-stone-800 italic flex items-center gap-3">
+                                            Gửi em <Heart className="w-5 h-5 text-rose-400 fill-rose-400 animate-pulse" />
                                         </DialogTitle>
-                                        <DialogDescription className="text-stone-500 font-['Patrick_Hand'] text-lg mt-1">
-                                            Viết cho tình yêu của chúng mình...
+                                        <DialogDescription className="text-stone-500 [font-family:var(--font-heart-ui)] text-lg mt-1">
+                                            Thư của hai đứa.
                                         </DialogDescription>
                                     </div>
-                                    <div className="w-12 h-12 rounded-full bg-stone-100 flex items-center justify-center border border-stone-200 shadow-inner">
+                                    <div className="hidden sm:flex size-12 shrink-0 rounded-full bg-stone-100 items-center justify-center border border-stone-200 shadow-inner">
                                         <BookHeart className="w-6 h-6 text-stone-400" />
                                     </div>
                                 </div>
 
-                                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#fffbf0] relative">
-                                    <div className="p-8 pb-4">
+                                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden relative">
+                                    <div className="px-4 pt-4 pb-4 sm:px-8 sm:pt-6">
                                         <div className="relative group">
                                             {/* Precise Lines Background */}
                                             <div
@@ -783,7 +754,7 @@ export function DiarySection() {
                                             />
 
                                             {/* Mood Indicator */}
-                                            <div className="absolute top-2 right-4 z-20 transition-all duration-500">
+                                            <div className="relative z-20 mb-2 flex justify-end">
                                                 <div className={cn(
                                                     "flex items-center gap-2 px-3 py-1 rounded-full bg-white/50 backdrop-blur-sm border shadow-sm transition-colors",
                                                     MOODS[currentMood].textColor.replace('text-', 'border-'),
@@ -809,7 +780,7 @@ export function DiarySection() {
                                                     setCurrentMood(detectMood(e.target.value));
                                                 }}
                                                 placeholder="bắt đầu viết ở đây nè..."
-                                                className="w-full min-h-[400px] border-0 bg-transparent text-2xl font-['Dancing_Script'] text-stone-800 focus-visible:ring-0 resize-none placeholder:text-stone-300 placeholder:italic p-0 pl-2 leading-[40px] pt-[9px]"
+                                                className="w-full min-h-[400px] border-0 bg-transparent text-2xl [font-family:var(--font-dancing)] text-stone-800 focus-visible:ring-0 resize-none placeholder:text-stone-300 placeholder:italic p-0 pl-2 leading-[40px] pt-[9px]"
                                                 style={{ lineHeight: '40px' }}
                                                 spellCheck={false}
                                             />
@@ -831,9 +802,9 @@ export function DiarySection() {
                                                             <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                                                             <button
                                                                 onClick={() => removeMedia(i)}
-                                                                className="absolute top-1 right-1 bg-rose-500 text-white rounded-full p-1 shadow-lg hover:bg-rose-600 transition-all opacity-0 group-hover:opacity-100 hover:scale-110"
+                                                                type="button" aria-label="Bỏ tệp đính kèm" className={cn('heart-glass-button', styles.deletePhoto)}
                                                             >
-                                                                <X className="w-3 h-3" />
+                                                                <X aria-hidden="true" />
                                                             </button>
                                                         </div>
                                                     ))}
@@ -845,7 +816,7 @@ export function DiarySection() {
                                     </div>
                                 </div>
 
-                                <div className="p-3 sm:p-6 bg-white border-t border-stone-100 flex flex-wrap gap-2 justify-between items-center z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+                                <div className={cn('p-3 sm:p-6 border-t flex flex-wrap gap-2 justify-between items-center z-20', styles.dialogBand)}>
                                     <div>
                                         <input
                                             ref={fileInputRef}
@@ -858,7 +829,7 @@ export function DiarySection() {
                                         <Button
                                             variant="ghost"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="h-11 px-2 sm:px-4 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl text-xs sm:text-sm"
+                                            className={styles.quietButton}
                                         >
                                             <Paperclip className="w-4 h-4 mr-1 sm:mr-2" />
                                             Đính kèm
@@ -868,195 +839,136 @@ export function DiarySection() {
                                     <Button
                                         onClick={handleSubmit}
                                         disabled={!newEntry.trim() && tempMedia.length === 0}
-                                        className="h-11 rounded-full bg-stone-800 text-[#fffcf5] hover:bg-black px-4 sm:px-8 shadow-lg shadow-stone-200 transition-all disabled:opacity-50 font-['Montserrat'] tracking-wide uppercase text-xs font-bold"
+                                        className={styles.primary}
                                     >
-                                        <Send className="w-4 h-4 mr-2" /> Send Letter
+                                        <Send className="w-4 h-4 mr-2" /> Gửi thư
                                     </Button>
                                 </div>
                             </DialogContent>
                         </Dialog>
                     </div>
-                </div>
+                </header>
 
-                    {/* Journal List or Deleted Logs */}
-                    <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1 pt-3 space-y-6 pb-28">
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center py-20 gap-4">
-                                <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
-                                <p className="text-stone-400 font-['Dancing_Script'] text-2xl">Đang mở hòm thư...</p>
-                            </div>
-                        ) : showDeletedLogs ? (
-                            // DELETED LOGS VIEW
-                            displayedDeletedLogs.length === 0 ? (
-                                <div className="text-center py-20 text-stone-300 italic flex flex-col items-center gap-4">
-                                    <Trash2 className="w-12 h-12 opacity-20" />
-                                    <p className="font-['Dancing_Script'] text-2xl">Thùng rác trống rỗng.</p>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <h3 className="text-center font-['Playfair_Display'] italic text-stone-400 mb-6">- Deleted Messages -</h3>
-                                    {displayedDeletedLogs.map((log) => (
-                                        <div key={log.id} className="bg-stone-100/50 p-6 rounded-lg border border-stone-200 opacity-70 hover:opacity-100 transition-opacity">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className="font-['Montserrat'] text-xs font-bold uppercase tracking-widest text-stone-400">
-                                                    Deleted by {isHim(log.deletedBy === user?.uid ? user?.email : '') ? "Him" : "Her"}
-                                                </span>
-                                                <span className="text-[10px] text-stone-400">
-                                                    {log.deletedAt ? format(new Date(log.deletedAt as unknown as number), 'MMM dd, HH:mm') : ''}
-                                                </span>
-                                            </div>
-                                            <p className="font-['Patrick_Hand'] text-lg text-stone-600 line-through decoration-stone-300 mb-2">
-                                                {log.text}
-                                            </p>
-                                            <div className="text-[10px] text-stone-400 font-mono">
-                                                Original ID: {log.originalEntryId}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )
-                        ) : displayedEntries.length === 0 ? (
-                            <div className="text-center py-20 text-stone-300 italic flex flex-col items-center gap-4">
-                                <PenLine className="w-12 h-12 opacity-20" />
-                                <p className="font-['Dancing_Script'] text-2xl">Chưa có lá thư nào cả. Viết lá thư đầu tiên đi nè!</p>
+                <div className={styles.scrollArea}>
+                    {loading ? (
+                        <div className={styles.empty} role="status">
+                            <Loader2 className="animate-spin" aria-hidden="true" />
+                            <p>Đang mở hòm thư…</p>
+                        </div>
+                    ) : showDeletedLogs ? (
+                        // DELETED LOGS VIEW
+                        displayedDeletedLogs.length === 0 ? (
+                            <div className={styles.empty}>
+                                <Trash2 aria-hidden="true" />
+                                <p>Thùng rác trống.</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 content-start">
-                                {displayedEntries.map((entry, idx) => {
-                                    const him = isHim(entry.authorEmail);
-                                    const rotation = idx % 2 === 0 ? 'md:-rotate-1' : 'md:rotate-1';
-                                    const mood = entry.mood || detectMood(entry.text) || 'default';
-                                    const moodConfig = MOODS[mood];
-
-                                    return (
-                                        <motion.div
-                                            key={entry.id}
-                                            initial={{ opacity: 0, y: 30 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ duration: 0.6, delay: idx * 0.1 }}
-                                            className={cn("group relative min-w-0 overflow-hidden", rotation, "hover:rotate-0 transition-transform duration-500")}
-                                            onClick={() => setSelectedEntry(entry)}
-                                        >
-                                            {/* Cute Tape Effect */}
-                                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-24 h-8 bg-[#fdf6e3]/80 backdrop-blur-sm shadow-sm opacity-90 z-20 rotate-2 transform border-l border-r border-[#e6e2d1]/50" />
-
-                                            {/* Mood Banner */}
-                                            <div className={cn(
-                                                "absolute -right-8 top-6 w-32 h-6 rotate-45 z-20 flex items-center justify-center shadow-sm text-[10px] font-bold uppercase tracking-widest text-white",
-                                                moodConfig.color.replace('from-', 'bg-gradient-to-r ').replace('/20', '')
-                                            )}>
-                                                {moodConfig.id !== 'default' && moodConfig.id}
-                                            </div>
-
-                                            {/* Main Card - Postcard Style */}
-                                            <div className={cn(
-                                                "relative bg-[#fffbf0] rounded-sm p-4 sm:p-6 shadow-[2px_4px_16px_-2px_rgba(0,0,0,0.08)] cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-[4px_8px_24px_-4px_rgba(0,0,0,0.12)] border border-[#f0ebe0]",
-                                                "after:absolute after:inset-0 after:border-2 after:border-dashed after:border-stone-200 after:rounded-sm after:m-2 after:pointer-events-none",
-                                                `bg-gradient-to-br ${moodConfig.color}`
-                                            )}>
-                                                {/* Paper Texture Overlay */}
-                                                <div className="absolute inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none" />
-
-                                                <div className="relative z-10 flex flex-col h-full">
-                                                    {/* Header */}
-                                                    <div className="flex justify-between items-start mb-4">
-                                                        <div className="flex items-center gap-3">
-                                                            {/* Avatar / Icon */}
-                                                            <div className={cn(
-                                                                "relative w-10 h-10 rounded-full flex items-center justify-center border-2 shadow-sm",
-                                                                him ? "bg-blue-50 border-blue-100 text-blue-500" : "bg-rose-50 border-rose-100 text-rose-500"
-                                                            )}>
-                                                                {(him && avatars.him) || (!him && avatars.her) ? (
-                                                                    <Image
-                                                                        src={him ? avatars.him : avatars.her}
-                                                                        alt="Avatar"
-                                                                        fill
-                                                                        className="object-cover rounded-full"
-                                                                    />
-                                                                ) : (
-                                                                    <span className="font-['Dancing_Script'] font-bold text-lg">
-                                                                        {him ? displayNames.him : displayNames.her}
-                                                                    </span>
-                                                                )}
-                                                            </div>
-                                                            <div>
-                                                                <p className={cn(
-                                                                    "font-['Playfair_Display'] font-bold text-base leading-tight",
-                                                                    him ? "text-blue-900" : "text-rose-900"
-                                                                )}>
-                                                                    {him ? `Lời của ${displayNames.him}` : `Lời của ${displayNames.her}`}
-                                                                </p>
-                                                                <p className="text-[11px] text-stone-400 font-['Montserrat'] uppercase tracking-wider">
-                                                                    {entry.createdAt ? format(new Date(entry.createdAt as unknown as number), 'MMM dd, yyyy') : 'Recently'}
-                                                                </p>
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Cute Stamp */}
-                                                        <div className="opacity-80 rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                                                            {him ? (
-                                                                <Cloud className="w-8 h-8 text-blue-200 fill-blue-50" />
-                                                            ) : (
-                                                                <Heart className="w-8 h-8 text-rose-200 fill-rose-50" />
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Handwritten Content Preview */}
-                                                    <div className="flex-1 relative mb-4 overflow-hidden">
-                                                        <p className="font-['Dancing_Script'] text-xl md:text-2xl text-stone-700 line-clamp-3 leading-relaxed group-hover:text-stone-900 transition-colors">
-                                                            {entry.text}
-                                                        </p>
-                                                    </div>
-
-                                                    {/* Footer Info */}
-                                                    <div className="flex items-center justify-between mt-auto pt-3 border-t border-dashed border-stone-200">
-                                                        {entry.media && entry.media.length > 0 ? (
-                                                            <div className="flex items-center gap-1.5 text-stone-400 bg-stone-100/50 px-2 py-1 rounded-md">
-                                                                <ImageIcon className="w-3.5 h-3.5" />
-                                                                <span className="text-xs font-['Montserrat'] font-medium">{entry.media.length} photos</span>
-                                                            </div>
-                                                        ) : <div />}
-
-                                                        <div className="flex items-center gap-1 text-stone-400 group-hover:text-rose-400 transition-colors font-['Dancing_Script'] text-lg">
-                                                            <span>Read more</span>
-                                                            <ChevronRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })}
-                            </div>
-                        )}
-
-                        {/* Infinite Scroll Trigger & Skeleton Loaders */}
-                        {hasMore && (
-                            <div ref={observerRef} className="pt-8 pb-32">
-                                {loading && (
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
-                                        <LetterSkeleton />
-                                        <LetterSkeleton />
+                            <div className="space-y-4">
+                                <h3 className="text-center [font-family:var(--font-heart-display)] italic text-stone-400 mb-6">- Deleted Messages -</h3>
+                                {displayedDeletedLogs.map((log) => (
+                                    <div key={log.id} className="bg-stone-100/50 p-6 rounded-lg border border-stone-200 opacity-70 hover:opacity-100 transition-opacity">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="[font-family:var(--font-heart-ui)] text-xs font-bold uppercase tracking-widest text-stone-400">
+                                                Deleted by {isHim(log.deletedBy === user?.uid ? user?.email : '') ? "Him" : "Her"}
+                                            </span>
+                                            <span className="text-[10px] text-stone-400">
+                                                {log.deletedAt ? format(new Date(log.deletedAt as unknown as number), 'MMM dd, HH:mm') : ''}
+                                            </span>
+                                        </div>
+                                        <p className="[font-family:var(--font-heart-ui)] text-lg text-stone-600 line-through decoration-stone-300 mb-2">
+                                            {log.text}
+                                        </p>
+                                        <div className="text-[10px] text-stone-400 font-mono">
+                                            Original ID: {log.originalEntryId}
+                                        </div>
                                     </div>
-                                )}
+                                ))}
                             </div>
-                        )}
+                        )
+                    ) : displayedEntries.length === 0 ? (
+                        <div className={styles.empty}>
+                            <PenLine aria-hidden="true" />
+                            <p>Chưa có lá thư nào.</p>
+                        </div>
+                    ) : (
+                        <div className={styles.journalGrid}>
+                            {displayedEntries.map((entry, index) => {
+                                const him = isHim(entry.authorEmail);
+                                const name = him ? displayNames.him : displayNames.her;
+                                const avatar = him ? avatars.him : avatars.her;
+                                const date = entry.createdAt ? new Date(entry.createdAt) : null;
 
-                        {!hasMore && displayedEntries.length > 0 && (
-                            <div className="py-12 text-center">
-                                <p className="font-['Dancing_Script'] text-2xl text-stone-400">
-                                    Hết mất rồi... Đây là lá thư đầu tiên của đôi mình đó! <Heart className="inline-block w-5 h-5 text-rose-400 fill-rose-400 ml-1" />
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                                return (
+                                    <article key={entry.id} className={cn('heart-glass-surface', styles.letterCard)}>
+                                        <header className={styles.letterHead}>
+                                            <span className={styles.avatar} data-him={Boolean(him)} aria-hidden="true">
+                                                {avatar ? <Image src={avatar} alt="" fill sizes="42px" /> : name.slice(0, 1)}
+                                            </span>
+                                            <div className={styles.letterMeta}>
+                                                <h3 className={styles.letterTitle}>Lời của {name}</h3>
+                                                {date && <time className={styles.date} dateTime={format(date, 'yyyy-MM-dd')}>{format(date, 'dd.MM.yyyy')}</time>}
+                                            </div>
+                                            {index === 0 ? (
+                                                <Image src="/heart-glass/envelope.webp" width={136} height={136} alt="" className={styles.letterArt} />
+                                            ) : (
+                                                <Mail className={styles.letterSeal} aria-hidden="true" />
+                                            )}
+                                        </header>
+
+                                        <p className={styles.letterText}>{entry.text}</p>
+
+                                        <footer className={styles.letterFoot}>
+                                            {entry.media && entry.media.length > 0 && (
+                                                <span className={styles.attachmentCount}>
+                                                    <Paperclip aria-hidden="true" />
+                                                    {entry.media.length} tệp
+                                                </span>
+                                            )}
+                                            <button type="button" className={styles.readButton} aria-label={`Mở thư của ${name}`} onClick={() => setSelectedEntry(entry)}>
+                                                <span className={cn('heart-glass-button', styles.readButtonSurface)}>
+                                                    Mở thư <ChevronRight aria-hidden="true" />
+                                                </span>
+                                            </button>
+                                        </footer>
+                                    </article>
+                                );
+                            })}
+                        </div>
+                    )}
+
+                    {/* Infinite Scroll Trigger & Skeleton Loaders */}
+                    {hasMore && (
+                        <div ref={observerRef} className="pt-8 pb-32">
+                            {loading && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
+                                    <LetterSkeleton />
+                                    <LetterSkeleton />
+                                </div>
+                            )}
+                        </div>
+                    )}
+
+                    {!hasMore && !showDeletedLogs && displayedEntries.length > 0 && (
+                        <div className={styles.journalEnd}>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className={styles.quietButton}
+                                onClick={event => event.currentTarget.closest('.snap-x')?.scrollBy({
+                                    left: window.innerWidth,
+                                    behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth'
+                                })}
+                            >
+                                Sweet Moments <ChevronRight className="size-4" aria-hidden="true" />
+                            </Button>
+                        </div>
+                    )}
+                </div>
                 <Dialog open={!!selectedEntry} onOpenChange={(open) => !open && setSelectedEntry(null)}>
-                    <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-3xl bg-[#fffbf0] border-none rounded-xl shadow-2xl p-0 overflow-hidden max-h-[90dvh] flex flex-col font-serif">
+                    <DialogContent className={cn('heart-glass-surface w-[calc(100%-1.5rem)] sm:max-w-3xl p-0 overflow-hidden max-h-[90dvh] flex flex-col', styles.dialog)}>
                         {/* Header */}
-                        <div className="bg-[#fff9e6] px-4 sm:px-8 pr-14 sm:pr-16 py-4 sm:py-6 border-b border-[#e6e2d1] flex items-center justify-between relative overflow-hidden">
-                            <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]" />
-                            <div className="flex items-center gap-4 relative z-10">
+                        <div className={cn('px-4 sm:px-8 pr-14 sm:pr-16 py-4 sm:py-6 border-b flex items-center justify-between relative overflow-hidden', styles.dialogBand)}>
+                            <div className="flex min-w-0 items-center gap-3 relative z-10">
                                 <div className={cn(
                                     "relative w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-sm",
                                     isHim(selectedEntry?.authorEmail) ? "bg-blue-50 border-blue-100 text-blue-500" : "bg-rose-50 border-rose-100 text-rose-500"
@@ -1069,30 +981,30 @@ export function DiarySection() {
                                             className="object-cover rounded-full"
                                         />
                                     ) : (
-                                        <span className="font-['Dancing_Script'] font-bold text-xl">
+                                        <span className="[font-family:var(--font-dancing)] font-bold text-xl">
                                             {isHim(selectedEntry?.authorEmail) ? displayNames.him : displayNames.her}
                                         </span>
                                     )}
                                 </div>
                                 <div>
                                     <DialogTitle className={cn(
-                                        "font-['Playfair_Display'] text-2xl italic flex items-center gap-2",
+                                        "[font-family:var(--font-heart-display)] text-2xl italic flex items-center gap-2",
                                         isHim(selectedEntry?.authorEmail) ? "text-blue-900" : "text-rose-900"
                                     )}>
                                         {isHim(selectedEntry?.authorEmail) ? `Lời của ${displayNames.him}` : `Lời của ${displayNames.her}`}
                                     </DialogTitle>
-                                    <DialogDescription className="text-stone-400 font-['Montserrat'] text-xs uppercase tracking-wider mt-1">
+                                    <DialogDescription className="text-stone-400 [font-family:var(--font-heart-ui)] text-xs uppercase tracking-wider mt-1">
                                         {selectedEntry?.createdAt && format(new Date(selectedEntry.createdAt as unknown as number), 'EEEE, MMM dd, yyyy • h:mm a')}
                                     </DialogDescription>
                                 </div>
                             </div>
 
-                            <div className="opacity-20 rotate-12">
+                            <div className="hidden sm:block opacity-20 rotate-12">
                                 {isHim(selectedEntry?.authorEmail) ? <Cloud className="w-16 h-16 text-blue-400" /> : <Heart className="w-16 h-16 text-rose-400" />}
                             </div>
                         </div>
 
-                        <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col bg-[#fffbf0]">
+                        <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col">
                             {/* Mood Atmosphere - Absolute Background Layer */}
                             <div className="absolute inset-0 pointer-events-none z-0">
                                 <MoodAtmosphere mood={(!selectedEntry?.mood || selectedEntry?.mood === 'default') ? detectMood(selectedEntry?.text || '') : selectedEntry.mood} />
@@ -1101,7 +1013,7 @@ export function DiarySection() {
                             {/* Scrollable Content Layer */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar relative z-10">
 
-                                <div className="p-8 pb-12 relative z-10">
+                                <div className="p-4 sm:p-8 pb-10 sm:pb-12 relative z-10">
                                     <div className="relative min-h-[300px]">
                                         {/* Precise Lines Background */}
                                         <div
@@ -1112,7 +1024,7 @@ export function DiarySection() {
                                             }}
                                         />
 
-                                        <p className="text-2xl font-['Dancing_Script'] leading-[40px] text-stone-800 whitespace-pre-wrap relative z-10 pl-2 pt-[9px]">
+                                        <p className="text-2xl [font-family:var(--font-dancing)] leading-[40px] text-stone-800 whitespace-pre-wrap [overflow-wrap:anywhere] relative z-10 pl-2 pt-[9px]">
                                             {selectedEntry?.text}
                                         </p>
                                     </div>
@@ -1120,8 +1032,8 @@ export function DiarySection() {
                                     {/* Detailed Gallery */}
                                     {selectedEntry?.media && selectedEntry.media.length > 0 && (
                                         <div className="mt-12">
-                                            <div className="flex items-center gap-2 mb-4 text-stone-400 font-['Montserrat'] text-xs uppercase tracking-widest font-bold">
-                                                <Paperclip className="w-4 h-4" /> Posted Photos & Videos
+                                            <div className="flex items-center gap-2 mb-4 text-stone-400 [font-family:var(--font-heart-ui)] text-xs uppercase tracking-widest font-bold">
+                                                <Paperclip className="w-4 h-4" /> Ảnh và video
                                             </div>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {selectedEntry.media.map((m, i) => (
@@ -1140,7 +1052,7 @@ export function DiarySection() {
                             </div>
                         </div>
 
-                        <div className="p-3 sm:p-6 bg-white border-t border-stone-100 flex flex-wrap gap-2 justify-between items-center shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] relative z-20">
+                        <div className={cn('p-3 sm:p-6 border-t flex flex-wrap gap-2 justify-between items-center relative z-20', styles.dialogBand)}>
                             <div className="flex gap-1 sm:gap-4 items-center">
                                 {user?.uid === selectedEntry?.authorId && (
                                     <>
@@ -1148,7 +1060,7 @@ export function DiarySection() {
                                             variant="ghost"
                                             size="sm"
                                             onClick={(e) => handleDelete(e, selectedEntry!.id)}
-                                            className="text-rose-400 hover:text-rose-600 hover:bg-rose-50 font-['Montserrat'] text-[10px] uppercase font-bold tracking-widest"
+                                            className={cn(styles.quietButton, styles.dangerText)}
                                         >
                                             Delete
                                         </Button>
@@ -1156,29 +1068,29 @@ export function DiarySection() {
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => handleEdit(selectedEntry!)}
-                                            className="text-blue-400 hover:text-blue-600 hover:bg-blue-50 font-['Montserrat'] text-[10px] uppercase font-bold tracking-widest"
+                                            className={styles.quietButton}
                                         >
                                             Edit
                                         </Button>
                                     </>
                                 )}
                             </div>
-                            <Button variant="outline" onClick={() => setSelectedEntry(null)} className="font-['Playfair_Display'] italic border-stone-200 hover:bg-stone-50">Close Letter</Button>
+                            <Button variant="outline" onClick={() => setSelectedEntry(null)} className={styles.quietButton}>Đóng thư</Button>
                         </div>
                     </DialogContent>
                 </Dialog>
 
                 {/* Delete Confirmation Dialog */}
                 <Dialog open={!!deleteConfirmation} onOpenChange={(open) => !open && setDeleteConfirmation(null)}>
-                    <DialogContent className="sm:max-w-md bg-white border-none shadow-2xl p-8 font-serif">
+                    <DialogContent className={cn('heart-glass-surface w-[calc(100%-1.5rem)] sm:max-w-md p-5 sm:p-8', styles.dialog)}>
                         <div className="flex flex-col items-center text-center gap-2">
                             <div className="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mb-4 shadow-sm">
                                 <AlertTriangle className="w-7 h-7 text-red-500 stroke-[1.5]" />
                             </div>
-                            <DialogTitle className="font-['Playfair_Display'] text-2xl font-bold text-stone-800 mb-2">
+                            <DialogTitle className="[font-family:var(--font-heart-display)] text-2xl font-bold text-stone-800 mb-2">
                                 Move to Trash?
                             </DialogTitle>
-                            <DialogDescription className="text-stone-500 font-['Patrick_Hand'] text-lg leading-relaxed max-w-xs mx-auto">
+                            <DialogDescription className="text-stone-500 [font-family:var(--font-heart-ui)] text-lg leading-relaxed max-w-xs mx-auto">
                                 Lá thư này sẽ được chuyển vào thùng rác. Bạn vẫn có thể xem lại nó ở đó nhé.
                             </DialogDescription>
 
@@ -1186,13 +1098,14 @@ export function DiarySection() {
                                 <Button
                                     variant="outline"
                                     onClick={() => setDeleteConfirmation(null)}
-                                    className="flex-1 rounded-xl border-stone-200 text-stone-600 hover:bg-stone-50 font-['Montserrat'] text-[10px] font-bold uppercase tracking-widest h-11"
+                                    className={cn(styles.quietButton, 'flex-1')}
                                 >
                                     Keep It
                                 </Button>
                                 <Button
+                                    variant="destructive"
                                     onClick={confirmDelete}
-                                    className="flex-1 rounded-xl bg-red-500 hover:bg-red-600 text-white shadow-lg hover:shadow-red-200 transition-all font-['Montserrat'] text-[10px] font-bold uppercase tracking-widest h-11"
+                                    className={cn(styles.primary, 'flex-1')}
                                 >
                                     Yes, Delete
                                 </Button>
@@ -1203,39 +1116,6 @@ export function DiarySection() {
 
             </div>
 
-            {/* Right Side Exploration Hint */}
-            <div className="hidden xl:block absolute top-1/2 right-4 -translate-y-1/2 z-20">
-                <motion.button
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.5 }}
-                    onClick={(e: React.MouseEvent) => {
-                        const container = e.currentTarget.closest('.snap-x');
-                        if (container) {
-                            container.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
-                        }
-                    }}
-                    className="group flex items-center gap-6 text-stone-300 hover:text-rose-500 transition-all"
-                >
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em] [writing-mode:vertical-lr] rotate-180 transition-colors">
-                        Discover Our Memories
-                    </span>
-
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-px h-20 bg-gradient-to-b from-transparent via-stone-200 to-stone-200 group-hover:via-rose-200 transition-all" />
-                        <motion.div
-                            whileHover={{ scale: 1.2 }}
-                            whileTap={{ scale: 0.9 }}
-                            animate={{ x: [0, 5, 0] }}
-                            transition={{ x: { duration: 2, repeat: Infinity, ease: "easeInOut" } }}
-                            className="p-5 bg-white/40 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] group-hover:shadow-rose-100 group-hover:border-rose-100 transition-all"
-                        >
-                            <ChevronRight className="w-6 h-6 text-stone-400 group-hover:text-rose-500" />
-                        </motion.div>
-                        <div className="w-px h-20 bg-gradient-to-t from-transparent via-stone-200 to-stone-200 group-hover:via-rose-200 transition-all" />
-                    </div>
-                </motion.button>
-            </div>
-        </section >
+        </section>
     );
 }

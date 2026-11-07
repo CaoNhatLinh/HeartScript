@@ -4,6 +4,10 @@
     --gold: #ecc29a;
     --muted: #c5ada9;
     --line: #efd0aa28;
+    --control-glass: linear-gradient(150deg, #ffdbb82e, #b273970c 62%, #d29c7826);
+    --control-edge: #f4cda166;
+    --control-shadow: inset 0 1px 1px #ffedd155, inset 0 -2px 4px #1a12194a, 0 4px 11px #160d1670;
+    --control-hover-shadow: inset 0 1px 2px #ffedd18c, inset 0 -2px 5px #1a121945, 0 5px 14px #160d168c;
     --serif: var(--font-cormorant), Georgia, serif;
     --safe-top: env(safe-area-inset-top, 0px);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -19,8 +23,8 @@
 }
 
 .page button {
-    cursor: pointer;
     touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .page :is(button, a):focus-visible {
@@ -195,7 +199,6 @@
     flex: 0 0 auto;
     width: 38px;
     height: 38px;
-    border: 1px solid #e9b68c57;
     color: var(--gold);
     border-radius: 50%;
 }
@@ -230,21 +233,14 @@
     justify-content: center;
     gap: 9px;
     padding-inline: 15px;
-    border: 1px solid var(--line);
     border-radius: 50px;
     color: var(--ivory);
     font-size: 12px;
     white-space: nowrap;
-    transition: background-color .25s, border-color .25s;
 }
 
 .sound svg {
     color: var(--gold);
-}
-
-.sound:hover {
-    background: #fbd0a115;
-    border-color: #ebc29570;
 }
 
 .soundError {
@@ -589,18 +585,16 @@
     gap: 11px;
     min-height: 50px;
     padding: 0 20px;
-    border: 1px solid #ffddb5;
+    border: 1px solid #ffe1bce8;
     border-radius: 50px;
-    background: linear-gradient(115deg, #f6d7ae, #e9b388);
-    box-shadow: 0 9px 29px #eead7f22, inset 0 0 15px #fff0dc38;
+    background: var(--heart-button-sweep), linear-gradient(150deg, #ffeed6f2, #f5d3acaa 45%, #f3c9a43b 72%, #f9d5b688) #e7ae85eb;
+    box-shadow: inset 0 1px 2px #fff7e9e6, inset 0 -3px 5px #ad624653, 0 3px 7px #160b1640, 0 8px 22px #dd986638;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
     color: #38202a;
     font-size: 14px;
     font-weight: 600;
-    transition: background-color .25s, box-shadow .25s;
-}
-
-.primary:hover {
-    box-shadow: 0 9px 38px #f1b98550, inset 0 0 15px #fff0dc60;
+    transition: background-color .22s, border-color .22s, box-shadow .22s;
 }
 
 .primary[aria-disabled="true"] {
@@ -620,14 +614,8 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    border: 1px solid #efbf9666;
     border-radius: 50%;
     color: var(--gold);
-    transition: background-color .2s;
-}
-
-.relight:hover {
-    background-color: #efbf961e;
 }
 
 .buttonArrow {
@@ -639,12 +627,10 @@
     align-items: center;
     min-height: 44px;
     gap: 9px;
+    padding-inline: 13px;
+    border-radius: 999px;
     color: var(--gold);
     font-size: 13px;
-}
-
-.textButton:hover {
-    color: var(--ivory);
 }
 
 .figure {
@@ -959,14 +945,8 @@
 .frameArrow::before {
     position: absolute;
     inset: 7px;
-    border: 1px solid #edbf9070;
     border-radius: 50%;
-    background: #25162255;
     content: '';
-}
-
-.frameArrow:hover::before {
-    background: #fbd0a12b;
 }
 
 .frameArrow svg {
@@ -1047,6 +1027,7 @@
     width: 44px;
     height: 44px;
     place-items: center;
+    border-radius: 50%;
 }
 
 .letter :is(button, a):focus-visible {
@@ -1100,8 +1081,61 @@
     min-height: 44px;
     gap: 8px;
     margin-top: 8px;
+    padding-inline: 12px;
+    border-radius: 999px;
     color: #733a4c;
     font-size: 12px;
+}
+
+.mark, .sound, .relight, .textButton, .frameArrow::before {
+    border: 1px solid var(--control-edge);
+    background: var(--heart-button-sweep), var(--control-glass) #331e2b5c;
+    box-shadow: var(--control-shadow);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition: background-color .22s, border-color .22s, box-shadow .22s;
+}
+
+.letterClose, .letterBack {
+    border: 1px solid #fff2e0;
+    background: var(--heart-button-sweep), linear-gradient(145deg, #fff8ebcc, #f7dfcf18 60%, #f7c4c344) #f3dcc4c9;
+    box-shadow: inset 0 1px 2px #fffbf4, inset 0 -2px 4px #ad6a6b2e, 0 3px 9px #7a455b26;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+    transition: background-color .22s, border-color .22s, box-shadow .22s;
+}
+
+@media (hover: hover) {
+    .brand:hover .mark, .sound:hover, .relight:hover, .textButton:hover,
+    .frameArrow:not([aria-disabled='true']):hover::before {
+        border-color: #f6cca8ab;
+        background-color: #9d5d6b55;
+        box-shadow: var(--control-hover-shadow);
+    }
+
+    .primary:not([aria-disabled='true']):hover {
+        border-color: #ffedc9;
+        background-color: #eeb28bf0;
+        box-shadow: inset 0 1px 2px #fff7e9, inset 0 -3px 5px #ad624653, 0 4px 10px #160b1640, 0 10px 24px #edb18757;
+    }
+
+    .letterClose:hover, .letterBack:hover {
+        background-color: #efccb7d9;
+        box-shadow: inset 0 1px 2px #fffbf4, inset 0 -2px 4px #ad6a6b2e, 0 4px 10px #7a455b40;
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .brand:hover .mark,
+    :is(.primary, .sound, .relight, .textButton, .letterClose, .letterBack):hover:not(:disabled, [aria-disabled='true']),
+    .frameArrow:hover:not([aria-disabled='true'])::before {
+        animation: var(--heart-button-sweep-animation);
+    }
+}
+
+.page :is(.primary, .sound, .relight, .textButton, .letterClose, .letterBack):not([aria-disabled='true']):active,
+.frameArrow:not([aria-disabled='true']):active::before {
+    box-shadow: inset 0 1px 4px #31172466, 0 1px 3px #160b1640;
 }
 
 @keyframes emerge {
@@ -1236,7 +1270,7 @@
         right: auto;
         margin: 0 0 -44px auto;
         border-radius: 50%;
-        background: #faecd9f2;
+        background-color: #faecd9f2;
     }
 }
 

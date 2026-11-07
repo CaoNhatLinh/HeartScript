@@ -48,7 +48,7 @@ const KawaiiSlider = ({ label, value, min, max, step, onChange }: { label: strin
 );
 
 const KawaiiSwitch = ({ label, checked, onChange }: { label: string, checked: boolean, onChange: (checked: boolean) => void }) => (
-    <div className="flex items-center justify-between py-2 px-1 hover:bg-white/30 rounded-lg transition-colors cursor-pointer" onClick={() => onChange(!checked)}>
+    <div className="flex items-center justify-between py-2 px-1 hover:bg-pink-100/45 rounded-lg transition-colors cursor-pointer" onClick={() => onChange(!checked)}>
         <span className="text-xs text-slate-700 font-semibold">{label}</span>
         <div className={clsx(
             "w-10 h-6 rounded-full relative transition-all duration-300 shadow-inner border border-white/50",
@@ -85,7 +85,7 @@ const KawaiiPerformance = () => {
                             "flex-1 py-2 text-xs font-bold uppercase tracking-wide rounded-lg transition-all",
                             performanceLevel === level
                                 ? "bg-pink-400 text-white shadow-md transform scale-105"
-                                : "text-slate-400 hover:text-slate-600 hover:bg-white/50"
+                                : "text-slate-600 hover:text-slate-700"
                         )}
                     >
                         {level}
@@ -263,7 +263,7 @@ const KawaiiTransformGroup = ({ label, modelKey }: { label: string, modelKey: Mo
     return (
         <div className={clsx(
             "rounded-xl overflow-hidden transition-all duration-300 border mb-2",
-            expanded ? "bg-white/60 border-pink-300 shadow-md" : "bg-white/30 border-white/50 hover:bg-white/50"
+            expanded ? "bg-white/60 border-pink-300 shadow-md" : "bg-white/30 border-white/50 hover:bg-pink-100/45"
         )}>
             <div className="w-full flex justify-between items-center p-3 cursor-pointer select-none" onClick={() => setExpanded(!expanded)}>
                 <div className="flex items-center gap-3">
@@ -448,7 +448,7 @@ const KawaiiSceneTab = () => {
                                     "py-3 px-4 rounded-xl text-xs font-bold capitalize transition-all border shadow-sm flex items-center justify-between group",
                                     isActive
                                         ? "bg-gradient-to-r from-pink-500 to-rose-400 border-transparent text-white shadow-pink-200 shadow-lg transform -translate-y-0.5"
-                                        : "bg-white/60 border-white text-slate-500 hover:bg-white hover:text-pink-500 hover:border-pink-200 hover:shadow-md"
+                                        : "border-white/70 text-slate-600 hover:text-pink-700 hover:border-pink-200"
                                 )}
                             >
                                 <span>{s.label}</span>
@@ -481,6 +481,7 @@ export const DebugPanel: React.FC = () => {
     return (
         <div
             onPointerDown={(e) => e.stopPropagation()}
+            data-valentine-palette="paper"
             className="fixed left-4 top-4 z-[9999] w-[350px] max-h-[90vh] flex flex-col font-sans transition-all duration-300 ease-out shadow-2xl rounded-[32px] overflow-hidden border-4 border-white/40 ring-4 ring-pink-100/50 pointer-events-auto"
         >
             {/* Glass Background */}
@@ -500,7 +501,7 @@ export const DebugPanel: React.FC = () => {
                 </div>
                 <button
                     onClick={toggleDebugPanel}
-                    className="w-8 h-8 rounded-full bg-white/50 hover:bg-white text-slate-400 hover:text-pink-500 flex items-center justify-center transition-all shadow-sm hover:rotate-90"
+                    className="w-8 h-8 rounded-full text-slate-600 hover:text-pink-700 flex items-center justify-center"
                 >
                     <X size={20} className="stroke-[3px]" />
                 </button>
@@ -520,7 +521,7 @@ export const DebugPanel: React.FC = () => {
                                     "flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-[10px] font-bold transition-all min-w-[50px]",
                                     isActive
                                         ? "bg-white text-pink-500 shadow-md transform scale-105"
-                                        : "text-slate-400 hover:text-slate-600 hover:bg-white/40"
+                                        : "text-slate-600 hover:text-slate-700"
                                 )}
                             >
                                 <TabIcon size={18} strokeWidth={isActive ? 2.5 : 2} />

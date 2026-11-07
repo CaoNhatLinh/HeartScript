@@ -94,7 +94,7 @@ export class ValentineErrorBoundary extends Component<Props, State> {
 
                         <button
                             onClick={() => window.location.reload()}
-                            className="flex items-center justify-center gap-2 px-6 py-3 bg-white/5 border border-white/10 rounded-full text-white/60 text-sm hover:bg-white/10 transition-all"
+                            className="flex items-center justify-center gap-2 px-6 py-3 border border-pink-200/20 rounded-full text-white/75 text-sm"
                             aria-label="Tải lại toàn trang"
                         >
                             <span>Tải lại trang</span>

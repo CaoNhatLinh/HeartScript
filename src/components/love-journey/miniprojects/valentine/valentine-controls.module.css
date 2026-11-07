@@ -1,0 +1,83 @@
+.scene {
+    --control-face: #45263f7a;
+    --control-hover: #7a3e647d;
+    --control-sheen: linear-gradient(150deg, #ffdced2e, #ffbbd80b 60%, #c66e9d2b);
+    --control-rim: #ffe3ee6b;
+    --control-hover-rim: #ffd7ecad;
+    --control-lower-edge: #260e2e66;
+    --control-depth: #190c2766;
+    --control-focus: #ffd7eb;
+}
+
+.scene [data-valentine-palette='paper'] {
+    --control-face: #f7dcea80;
+    --control-hover: #f0bdd778;
+    --control-sheen: linear-gradient(150deg, #fff8fccc, #f7dded33 63%, #d796b344);
+    --control-rim: #fffbf9d9;
+    --control-hover-rim: #fffaf8;
+    --control-lower-edge: #8f3e6926;
+    --control-depth: #6b31572a;
+    --control-focus: #873b65;
+}
+
+@layer components {
+    .scene :where(button, [data-valentine-control='face']):not([data-valentine-control='plain']) {
+        border-radius: 999px;
+        background: var(--heart-button-sweep), var(--control-sheen) var(--control-face);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+        transition-duration: .2s;
+    }
+
+    @media (hover: hover) {
+        .scene :where(button, [data-valentine-control='face']):not([data-valentine-control='plain'], :disabled, [aria-disabled='true']):hover,
+        .scene button:not(:disabled, [aria-disabled='true']):hover > [data-valentine-control='face'] {
+            background-color: var(--control-hover);
+        }
+    }
+}
+
+.scene :where(button, [data-valentine-control='face']):not([data-valentine-control='plain']) {
+    /* Keep Tailwind's selection rings on the frame buttons. */
+    box-shadow:
+        inset 0 1px 1px var(--control-rim),
+        inset 0 -2px 4px var(--control-lower-edge),
+        var(--tw-ring-offset-shadow, 0 0 #0000),
+        var(--tw-ring-shadow, 0 0 #0000),
+        var(--tw-shadow, 0 0 #0000),
+        0 3px 8px var(--control-depth);
+    transition-property: background-color, border-color, box-shadow, color, opacity, transform, translate, scale;
+}
+
+.scene button {
+    -webkit-tap-highlight-color: transparent;
+}
+
+.scene button:focus-visible {
+    outline: 2px solid var(--control-focus);
+    outline-offset: 3px;
+}
+
+@media (hover: hover) {
+    .scene :where(button, [data-valentine-control='face']):not([data-valentine-control='plain'], :disabled, [aria-disabled='true']):hover,
+    .scene button:not(:disabled, [aria-disabled='true']):hover > [data-valentine-control='face'] {
+        --control-rim: var(--control-hover-rim);
+    }
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+    .scene :where(button, [data-valentine-control='face']):hover:not([data-valentine-control='plain'], :disabled, [aria-disabled='true']),
+    .scene button:hover:not(:disabled, [aria-disabled='true']) > [data-valentine-control='face'] {
+        animation: var(--heart-button-sweep-animation);
+    }
+}
+
+.scene :where(button):not([data-valentine-control='plain'], :disabled, [aria-disabled='true']):active {
+    --control-depth: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .scene :where(button, [data-valentine-control='face']):not([data-valentine-control='plain']) {
+        transition-duration: 0s;
+    }
+}

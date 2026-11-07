@@ -110,8 +110,8 @@ export const GiftBox: React.FC = () => {
     return (
         <group
             onClick={handleOpen}
-            onPointerOver={() => { document.body.style.cursor = 'pointer'; }}
-            onPointerOut={() => { document.body.style.cursor = 'auto'; }}
+            onPointerOver={() => { document.body.style.cursor = 'var(--heart-cursor-action, pointer)'; }}
+            onPointerOut={() => { document.body.style.removeProperty('cursor'); }}
         >
             <BoxFireworks active={isOpen} />
             {/* Box body */}

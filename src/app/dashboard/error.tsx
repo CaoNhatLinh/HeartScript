@@ -19,7 +19,8 @@ export default function Error({
             <p className="text-gray-500">We couldn&apos;t load this part of our space.</p>
             <button
                 onClick={() => reset()}
-                className="px-4 py-2 bg-pink-500 text-white rounded-xl hover:bg-pink-600 transition-colors"
+                className="heart-glass-button px-4 py-2"
+                data-glass-variant="primary"
             >
                 Try again
             </button>

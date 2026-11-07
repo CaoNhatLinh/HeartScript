@@ -11,7 +11,7 @@ export default function DashboardLayout({
     children: React.ReactNode;
 }) {
     return (
-        <div className="min-h-screen bg-neutral-50 overflow-hidden" suppressHydrationWarning>
+        <div className="min-h-dvh bg-neutral-50 overflow-hidden" suppressHydrationWarning>
             {children}
         </div>
     );

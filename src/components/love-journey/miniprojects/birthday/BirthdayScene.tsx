@@ -64,11 +64,11 @@ function Photograph({ memory, anchor }: { memory: Memory; anchor: Object3D }) {
         const imageAspect = image.width / image.height;
         const frameAspect = 1.91 / 2.29;
         copy.repeat.set(Math.min(1, frameAspect / imageAspect), Math.min(1, imageAspect / frameAspect));
-        copy.offset.set((1 - copy.repeat.x) / 2, (1 - copy.repeat.y) * 0.66);
+        copy.offset.set((1 - copy.repeat.x) * memory.focusX, (1 - copy.repeat.y) * 0.66);
         copy.colorSpace = SRGBColorSpace;
         copy.needsUpdate = true;
         return copy;
-    }, [source]);
+    }, [memory.focusX, source]);
 
     useEffect(() => () => texture.dispose(), [texture]);
 

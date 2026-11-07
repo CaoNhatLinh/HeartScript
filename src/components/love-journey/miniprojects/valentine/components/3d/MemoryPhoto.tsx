@@ -171,8 +171,8 @@ const SwayingPhotoFrame: React.FC<{
         <group
             ref={groupRef}
             onClick={(e) => { e.stopPropagation(); onFocus(index); }}
-            onPointerOver={() => { setHovered(true); document.body.style.cursor = 'pointer'; }}
-            onPointerOut={() => { setHovered(false); document.body.style.cursor = 'auto'; }}
+            onPointerOver={() => { setHovered(true); document.body.style.cursor = 'var(--heart-cursor-action, pointer)'; }}
+            onPointerOut={() => { setHovered(false); document.body.style.removeProperty('cursor'); }}
         >
             <mesh position={[0, 0, -0.01]} castShadow={performanceLevel === 'high'} receiveShadow={performanceLevel === 'high'}>
                 <planeGeometry args={[1.2, 1.5]} />

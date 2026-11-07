@@ -314,7 +314,7 @@ export const ScreenshotButton: React.FC = () => {
             <button
                 onClick={handleScreenshot}
                 disabled={countdown !== null}
-                className="flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md rounded-full text-pink-100 font-bold border border-white/20 hover:bg-white/20 hover:scale-105 active:scale-95 transition-all shadow-lg group disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-pink-100 font-bold border border-pink-200/25 motion-safe:hover:scale-105 motion-safe:active:scale-95 group disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Chụp khoảnh khắc"
                 aria-label="Chụp ảnh màn hình"
             >

@@ -38,6 +38,7 @@ import { TimelineBar } from './components/ui/TimelineBar';
 import { ConfettiBurst } from './components/3d/ConfettiBurst';
 import { FireworksEffect } from './components/3d/FireworksEffect';
 import { ValentineErrorBoundary } from './components/ui/feedback/ValentineErrorBoundary';
+import controls from './valentine-controls.module.css';
 
 export default function ValentineEntry() {
   // ALL hooks must be called unconditionally before any conditional return
@@ -83,6 +84,9 @@ export default function ValentineEntry() {
   useEffect(() => {
     setIsClient(true); // eslint-disable-line
     getValentineImages().then(setValentinePhotos);
+    return () => {
+      document.body.style.removeProperty('cursor');
+    };
   }, [setValentinePhotos]);
 
   // Set DPR based on device width (client-side only)
@@ -110,7 +114,7 @@ export default function ValentineEntry() {
       <GlobalAudioElement />
       <TransitionController />
       <Analytics />
-      <div className="fixed inset-0 w-full h-full bg-valentine-dark overflow-hidden" suppressHydrationWarning>
+      <div className={`fixed inset-0 w-full h-full bg-valentine-dark overflow-hidden ${controls.scene}`} suppressHydrationWarning>
         <ValentineErrorBoundary area="Valentine 3D Canvas">
           <div className="absolute inset-0 z-0">
             <Canvas
@@ -181,7 +185,7 @@ export default function ValentineEntry() {
                 <div className="absolute bottom-4 sm:bottom-6 left-4 sm:left-6 pointer-events-auto z-50">
                   <button
                     onClick={toggleDebugPanel}
-                    className="p-2 sm:p-3 bg-white/10 backdrop-blur-md rounded-full text-white/90 hover:bg-white/20 transition-all shadow-lg border border-white/10"
+                    className="p-2 sm:p-3 rounded-full text-white/90 border border-pink-200/20"
                     title="Open Debug Panel"
                     aria-label="Mở bảng điều khiển debug"
                     aria-expanded={debugPanelVisible}

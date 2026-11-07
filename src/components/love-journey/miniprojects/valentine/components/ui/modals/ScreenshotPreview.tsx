@@ -126,9 +126,10 @@ export const ScreenshotPreview: React.FC = () => {
                     <div className="flex items-center gap-10 mt-8 mb-4">
                         <button
                             onClick={handleClose}
+                            data-valentine-control="plain"
                             className="group flex flex-col items-center gap-2 text-white/50 hover:text-white transition-all opacity-80"
                         >
-                            <div className="p-2.5 rounded-full border border-white/20 group-hover:bg-white/10 transition-all">
+                            <div data-valentine-control="face" className="p-2.5 rounded-full border border-pink-200/25">
                                 <X size={20} />
                             </div>
                             <span className="text-[9px] font-bold uppercase tracking-widest">Bỏ qua</span>
@@ -136,9 +137,10 @@ export const ScreenshotPreview: React.FC = () => {
 
                         <button
                             onClick={handleDownload}
+                            data-valentine-control="plain"
                             className="group flex flex-col items-center gap-2 text-white"
                         >
-                            <div className="p-3.5 rounded-full bg-pink-500 shadow-xl shadow-pink-500/30 group-hover:scale-110 group-hover:bg-pink-600 transition-all">
+                            <div data-valentine-control="face" className="p-3.5 rounded-full bg-pink-500 shadow-xl shadow-pink-500/30 motion-safe:group-hover:scale-110 group-hover:bg-pink-600">
                                 <Download size={24} />
                             </div>
                             <span className="text-[9px] font-bold uppercase tracking-widest text-pink-300">Lưu ảnh</span>

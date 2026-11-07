@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32">
+    <defs>
+        <linearGradient id="fruit" x2=".8" y2="1">
+            <stop stop-color="#ffa5b1"/>
+            <stop offset=".55" stop-color="#f06b84"/>
+            <stop offset="1" stop-color="#c3345d"/>
+        </linearGradient>
+    </defs>
+    <g transform="rotate(139 16 16)" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 8.5C12.4 4.4 5 7 5.5 12.7c.5 5.8 6.4 12.1 10.5 14.8 4-2.7 10-9 10.5-14.8C27 7 19.6 4.4 16 8.5Z" fill="none" stroke="#fff8f1" stroke-width="3.6"/>
+        <path d="M16 8.5C12.4 4.4 5 7 5.5 12.7c.5 5.8 6.4 12.1 10.5 14.8 4-2.7 10-9 10.5-14.8C27 7 19.6 4.4 16 8.5Z" fill="url(#fruit)" stroke="#8b2c4d" stroke-width="1.2"/>
+        <path d="M16.2 7.3c-2.3-2.9-5.2-3.3-8.8-2.5 1.2 3.2 3.3 4.5 6 4.4l-.8 2.4c1.9.3 3.4-.8 4-2.4 1 1.1 2.7 1.8 4.4 1.2l-1.1-2.1c2.6-.4 4.3-1.9 5-4.3-3.8-.6-6.7.5-8.7 3.3Z" fill="#82a66c" stroke="#fff8f1" stroke-width="2.6" paint-order="stroke"/>
+        <path d="M16.2 7.3c-2.3-2.9-5.2-3.3-8.8-2.5 1.2 3.2 3.3 4.5 6 4.4l-.8 2.4c1.9.3 3.4-.8 4-2.4 1 1.1 2.7 1.8 4.4 1.2l-1.1-2.1c2.6-.4 4.3-1.9 5-4.3-3.8-.6-6.7.5-8.7 3.3Z" fill="none" stroke="#466341" stroke-width=".95"/>
+        <path d="M8.6 12.2c-.4 1.4.2 3.6 1.2 4.8" fill="none" stroke="#ffe4e8" stroke-width="1.35"/>
+        <path d="m12 13.5 .35 .85m7.75-1.2-.35 .85m-4.35 1.8 .15 .9m-2.3 2.3 .35 .8m5.7-.9-.35 .8m-2.8 2.25v.75" fill="none" stroke="#fff0be" stroke-width="1.4"/>
+    </g>
+</svg>

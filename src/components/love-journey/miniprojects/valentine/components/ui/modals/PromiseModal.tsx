@@ -147,18 +147,16 @@ export const PromiseModal: React.FC = () => {
                 </div>
 
                 {/* Cute Button */}
-                <motion.button
+                <button
+                  type="button"
                   onClick={handleContinue}
-                  className="group relative px-8 py-3 bg-gradient-to-r from-rose-400 to-pink-400 hover:from-rose-500 hover:to-pink-500 text-white font-medium rounded-full shadow-lg shadow-pink-300/50 transition-all flex items-center gap-2 overflow-hidden"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+                  className="heart-glass-button inline-flex items-center gap-2 rounded-full px-8 py-3 font-semibold"
+                  data-glass-variant="primary"
+                  data-valentine-control="plain"
                 >
-                  <span className="relative z-10">Nhận quà thôi nàoo</span>
-                  <Heart size={18} className="relative z-10 fill-current animate-pulse" />
-
-                  {/* Button Shine Effect */}
-                  <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-700 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12" />
-                </motion.button>
+                  Nhận quà thôi nàoo
+                  <Heart size={18} className="fill-current animate-pulse motion-reduce:animate-none" aria-hidden="true" />
+                </button>
               </div>
             </div>
           </motion.div>

@@ -1,0 +1,115 @@
+:root {
+    --heart-button-sweep: linear-gradient(116deg, transparent 44%, #fff2 48%, #fff6 50%, #fff2 52%, transparent 56%) 100% 50% / 360% 100% no-repeat padding-box;
+    --heart-button-sweep-animation: heart-button-sweep .68s ease-out;
+}
+
+@keyframes heart-button-sweep {
+    from { background-position: 100% 50%, 0 0; }
+    to { background-position: 0 50%, 0 0; }
+}
+
+@layer components {
+    .heart-glass-button {
+        --glass-button-light: #fffdf6bb;
+        --glass-button-tint: #efd3e28a;
+        --glass-button-edge: #fffbf5f0;
+        --glass-button-hover-edge: #c18aa9bc;
+        --glass-button-ink: #724159;
+        --glass-button-shine: #fffaf6ee;
+        --glass-button-refract: #ab698c40;
+        --glass-button-cast: #60324e30;
+        --glass-button-focus: #a3557a;
+        border: 1px solid var(--glass-button-edge);
+        border-radius: var(--glass-button-radius, .9rem);
+        background: var(--heart-button-sweep), linear-gradient(152deg, var(--glass-button-light), var(--glass-button-tint) 74%) padding-box;
+        color: var(--glass-button-ink);
+        box-shadow: inset 0 1px 1px var(--glass-button-shine), inset 0 -2px 4px var(--glass-button-refract), 0 3px 8px -2px var(--glass-button-cast);
+        -webkit-backdrop-filter: blur(8px);
+        backdrop-filter: blur(8px);
+        cursor: pointer;
+        transition: box-shadow .18s ease, border-color .18s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .heart-glass-button--primary, .heart-glass-button[data-glass-variant='primary'] {
+        --glass-button-light: #a4617c;
+        --glass-button-tint: #77364f;
+        --glass-button-edge: #82445f;
+        --glass-button-hover-edge: #c082a0;
+        --glass-button-ink: #fffaf9;
+        --glass-button-shine: #ffe3ed9e;
+        --glass-button-refract: #451b3a5c;
+        --glass-button-cast: #76355253;
+    }
+
+    .heart-glass-button--danger, .heart-glass-button[data-glass-variant='danger'] {
+        --glass-button-light: #b7546b;
+        --glass-button-tint: #872e4a;
+        --glass-button-edge: #904159;
+        --glass-button-hover-edge: #ca7a8f;
+        --glass-button-ink: #fffaf9;
+        --glass-button-shine: #ffebec9e;
+        --glass-button-refract: #55152d5e;
+        --glass-button-cast: #71284052;
+    }
+
+    .heart-glass-button--quiet, .heart-glass-button[data-glass-variant='quiet'] {
+        --glass-button-light: #fffdf73b;
+        --glass-button-tint: #edcddd34;
+        --glass-button-edge: #fff9f576;
+        --glass-button-hover-edge: #c68caa9c;
+        --glass-button-ink: #77455d;
+        --glass-button-shine: #fffdf79c;
+        --glass-button-refract: #ad6a8a29;
+        --glass-button-cast: #60324e23;
+    }
+
+    .heart-glass-button[data-glass-variant='dark'] {
+        --glass-button-light: #a9748b50;
+        --glass-button-tint: #4d2c44ae;
+        --glass-button-edge: #dfabca69;
+        --glass-button-hover-edge: #f6c4ddae;
+        --glass-button-ink: #fff1f7;
+        --glass-button-shine: #ffdfef6b;
+        --glass-button-refract: #22102185;
+        --glass-button-cast: #140a17a0;
+        --glass-button-focus: #ffcbe3;
+    }
+
+    .heart-glass-button:is([aria-pressed='true'], [aria-expanded='true'], [aria-current='page']) {
+        border-color: var(--glass-button-hover-edge);
+        box-shadow: inset 0 1px 2px var(--glass-button-shine), inset 0 -3px 6px var(--glass-button-refract), 0 3px 8px -2px var(--glass-button-cast);
+    }
+
+    @media (hover: hover) {
+        .heart-glass-button:hover:not(:disabled, [aria-disabled='true']) {
+            border-color: var(--glass-button-hover-edge);
+            box-shadow: inset 0 2px 4px var(--glass-button-shine), inset 0 -3px 6px var(--glass-button-refract), 0 6px 13px -3px var(--glass-button-cast);
+        }
+    }
+
+    @media (hover: hover) and (prefers-reduced-motion: no-preference) {
+        .heart-glass-button:hover:not(:disabled, [aria-disabled='true']),
+        button:not(.heart-glass-button):hover:not(:disabled, [aria-disabled='true']) > .heart-glass-button {
+            animation: var(--heart-button-sweep-animation);
+        }
+    }
+
+    .heart-glass-button:active:not(:disabled, [aria-disabled='true']) {
+        box-shadow: inset 0 1px 2px var(--glass-button-shine), inset 0 2px 5px var(--glass-button-refract), 0 1px 3px -1px var(--glass-button-cast);
+    }
+
+    .heart-glass-button:focus-visible {
+        outline: 2px solid var(--glass-button-focus);
+        outline-offset: 3px;
+    }
+
+    .heart-glass-button:is(:disabled, [aria-disabled='true']) {
+        opacity: .55;
+        cursor: not-allowed;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .heart-glass-button { transition: none; }
+    }
+}

@@ -90,7 +90,7 @@ export default function ProjectsPage() {
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={(e) => setSchedule(project.id, e)}
-                                                        className="text-gray-300 hover:text-indigo-500 hover:bg-indigo-50"
+                                                        aria-label="Set schedule"
                                                     >
                                                         <Clock className="w-4 h-4" />
                                                     </Button>
@@ -98,7 +98,8 @@ export default function ProjectsPage() {
                                                         variant="ghost"
                                                         size="icon"
                                                         onClick={(e) => deleteProject(project.id, e)}
-                                                        className="text-gray-300 hover:text-red-500 hover:bg-red-50"
+                                                        aria-label="Delete project"
+                                                        className="text-[#9c4059]"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
                                                     </Button>
@@ -139,7 +140,6 @@ export default function ProjectsPage() {
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={(e) => setSchedule(project.id, e)}
-                                                    className="text-gray-500 hover:text-indigo-500"
                                                 >
                                                     <Clock className="w-4 h-4 mr-1" />
                                                     Set Schedule

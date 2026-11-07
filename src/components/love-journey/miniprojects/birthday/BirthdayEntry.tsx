@@ -157,7 +157,7 @@ function KeepsakeStage({
                         <div className={styles.photoPoster} data-frame={photo.frame}>
                             {/* The same photograph is used as a texture in the 3D frame. */}
                             {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img src={photo.image} alt="" />
+                            <img src={photo.image} alt="" style={{ objectPosition: `${photo.focusX * 100}% center` }} />
                         </div>
                     ) : scene === 'cake' ? (
                         // eslint-disable-next-line @next/next/no-img-element
@@ -354,7 +354,7 @@ export default function BirthdayEntry({ story }: { story: BirthdayStory }) {
                         <h1 id="birthday-title" className={styles.title} ref={heading} tabIndex={-1}>
                             {chapter.title[0]} <em>{chapter.title[1]}</em>
                         </h1>
-                        <p className={styles.description}>{chapter.description}</p>
+                        {chapter.description && <p className={styles.description}>{chapter.description}</p>}
                     </div>
 
                     <div className={styles.figure}>

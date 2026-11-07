@@ -2,7 +2,8 @@
 
 import { FirebaseError } from 'firebase/app';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { ArrowUpRight, Heart, LoaderCircle } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Heart, LoaderCircle } from 'lucide-react';
+import Image from 'next/image';
 import { useState } from 'react';
 import { createSession } from '@/app/actions/auth';
 import { birthdayPath, dashboardPath } from '@/lib/auth-destination';
@@ -71,9 +72,30 @@ function Mascot({ role }: { role: Role }) {
     );
 }
 
+function ProfileArt({ role }: { role: Role }) {
+    const [artUnavailable, setArtUnavailable] = useState(false);
+
+    return (
+        <span className={styles.art} aria-hidden="true">
+            {artUnavailable ? <Mascot role={role} /> : (
+                <Image
+                    className={styles.charm}
+                    src={role === 'him' ? '/heart-glass/orange.webp' : '/heart-glass/strawberry.webp'}
+                    alt=""
+                    width={544}
+                    height={544}
+                    sizes="(max-width: 540px) 30vw, (max-width: 900px) 21vw, 220px"
+                    loading="eager"
+                    onError={() => setArtUnavailable(true)}
+                />
+            )}
+        </span>
+    );
+}
+
 const profiles = [
-    { role: 'him', name: 'Anh', fruit: 'Cam' },
-    { role: 'her', name: 'Em', fruit: 'Dâu' },
+    { role: 'him', name: 'Anh' },
+    { role: 'her', name: 'Em' },
 ] as const;
 
 export default function LoginScreen({ destination = dashboardPath }: { destination?: string }) {
@@ -115,32 +137,28 @@ export default function LoginScreen({ destination = dashboardPath }: { destinati
 
     return (
         <main className={styles.page} lang="vi">
+            <div className={styles.brand}><Heart size={16} strokeWidth={1.5} aria-hidden="true" /> HeartScript</div>
             <div className={styles.sheet}>
-                <header className={styles.heading}>
-                    <div className={styles.brand}><Heart size={15} aria-hidden="true" /> HeartScript</div>
-                    <h1>{isBirthday ? <>Quà <em>sinh nhật</em></> : <>Chào <em>mình.</em></>}</h1>
-                    <p>{isBirthday ? 'Đăng nhập để mở quà nha.' : 'Hôm nay ai ghé chơi nè?'}</p>
-                </header>
+                {isBirthday ? (
+                    <h1 className={styles.heading}>Quà <em>sinh nhật</em></h1>
+                ) : <h1 className="sr-only">Đăng nhập</h1>}
                 <div className={styles.profiles}>
-                    {profiles.map(({ role, name, fruit }) => (
+                    {profiles.map(({ role, name }) => (
                         <button key={role} type="button" aria-label={`Đăng nhập: ${name}`} aria-busy={pending === role}
-                            disabled={!!pending} className={styles.profile} data-role={role} onClick={() => signIn(role)}>
-                            <span className={styles.fruit}>{fruit}</span>
-                            <Mascot role={role} />
-                            <span className={styles.identity}>
-                                <span>{name}</span>
-                                <span className={styles.arrow}>
-                                    {pending === role ? <LoaderCircle className={styles.spinner} size={17} /> : <ArrowUpRight size={17} />}
-                                </span>
+                            disabled={!!pending} className={`heart-glass-surface ${styles.profile}`} data-role={role} onClick={() => signIn(role)}>
+                            <ProfileArt role={role} />
+                            <span className={styles.profileName}>{name}</span>
+                            <span className={`heart-glass-surface ${styles.arrow}`} aria-hidden="true">
+                                {pending === role ? <LoaderCircle className={styles.spinner} size={18} /> : <ArrowRight size={18} strokeWidth={1.6} />}
                             </span>
                         </button>
                     ))}
                 </div>
-                <p className={styles.google} role="status">{pending ? 'Đang đăng nhập…' : 'Đăng nhập bằng Google'}</p>
+                <p className="sr-only" role="status">{pending ? 'Đang đăng nhập…' : ''}</p>
                 {error && (
-                    <div role="alert" className={styles.error}>
+                    <div role="alert" className={`heart-glass-surface ${styles.error}`}>
                         {error.message}
-                        {error.retryUrl && <a href={error.retryUrl}>Mở bằng localhost <ArrowUpRight size={14} aria-hidden="true" /></a>}
+                        {error.retryUrl && <a className="heart-glass-button" href={error.retryUrl}>Mở bằng localhost <ArrowUpRight size={14} aria-hidden="true" /></a>}
                     </div>
                 )}
             </div>

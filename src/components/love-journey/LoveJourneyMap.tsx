@@ -1,12 +1,13 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { useCallback, useRef, useState } from 'react';
+import { motion, useReducedMotion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import {
     Home,
-    BookHeart,
-    Image as ImageIcon,
-    Terminal,
+    BookOpen,
+    Images,
+    Heart,
+    Sparkles,
     LogOut,
     Pencil,
     Check,
@@ -25,15 +26,9 @@ import { removeSession } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Image from 'next/image';
+import { useWheelSections } from './useWheelSections';
 
 const COUPLE_AVATAR = "/couple-art.png";
-
-const SECTION_THEMES = [
-    { from: 'from-neutral-900/0', to: 'to-mid-900/0' }, // Home
-    { from: 'from-rose-200/20', to: 'to-orange-100/20' }, // Journal
-    { from: 'from-purple-200/20', to: 'to-pink-100/20' }, // Memories
-    { from: 'from-indigo-200/20', to: 'to-violet-100/20' }, // Projects
-];
 
 export default function LoveJourneyMap() {
     const { user, setUser } = useAuthStore();
@@ -41,6 +36,7 @@ export default function LoveJourneyMap() {
     const [isEditingName, setIsEditingName] = useState(false);
     const [newName, setNewName] = useState(user?.displayName || '');
     const [updating, setUpdating] = useState(false);
+    const reduceMotion = useReducedMotion();
 
     const containerRef = useRef<HTMLDivElement>(null);
 
@@ -96,50 +92,47 @@ export default function LoveJourneyMap() {
         }
     };
 
-    const scrollToSection = (index: number) => {
-        if (containerRef.current) {
-            containerRef.current.scrollTo({
-                left: index * window.innerWidth,
-                behavior: 'smooth'
+    const scrollToSection = useCallback((index: number) => {
+        const container = containerRef.current;
+        if (container) {
+            container.scrollTo({
+                left: index * container.clientWidth,
+                behavior: reduceMotion ? 'instant' : 'smooth'
             });
             setActiveIndex(index);
         }
-    };
+    }, [reduceMotion]);
+
+    useWheelSections(containerRef, scrollToSection);
 
     const handleScroll = () => {
-        if (containerRef.current) {
-            const index = Math.round(containerRef.current.scrollLeft / window.innerWidth);
-            if (index !== activeIndex) {
-                setActiveIndex(index);
-            }
+        const container = containerRef.current;
+        if (container?.clientWidth) {
+            setActiveIndex(Math.round(container.scrollLeft / container.clientWidth));
         }
     };
 
     const navItems = [
         { icon: Home, label: 'Home' },
-        { icon: BookHeart, label: 'Journal' },
-        { icon: ImageIcon, label: 'Memories' },
-        { icon: Terminal, label: 'Magic' },
+        { icon: BookOpen, label: 'Journal' },
+        { icon: Images, label: 'Memories' },
+        { icon: Sparkles, label: 'Magic' },
     ];
 
     return (
         <div className="relative w-screen h-dvh bg-neutral-900 overflow-hidden font-sans" suppressHydrationWarning>
-            <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-[60]" suppressHydrationWarning>
+            <div className="absolute top-0 left-0 right-0 h-0.5 z-[60]" suppressHydrationWarning>
                 <motion.div
                     style={{ scaleX, originX: 0 }}
-                    className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+                    className="h-full bg-[#b68094]/75"
                     suppressHydrationWarning
                 />
             </div>
 
-            {/* Ambient Atmosphere Overlay */}
-            <motion.div
-                animate={{
-                    background: `linear-gradient(to bottom, transparent, ${SECTION_THEMES[activeIndex]?.from.replace('from-', '') || 'transparent'})`
-                }}
-                transition={{ duration: 1 }}
-                className="absolute inset-0 z-[55] pointer-events-none opacity-50 mix-blend-overlay"
-            />
+            <button type="button" onClick={() => scrollToSection(0)} className="heart-glass-brand absolute top-4 left-4 z-[60] sm:left-8" aria-label="HeartScript · Về Home">
+                <Heart size={18} strokeWidth={1.6} aria-hidden="true" />
+                HeartScript
+            </button>
 
             {/* Horizontal Scroll Container */}
             <div
@@ -163,19 +156,17 @@ export default function LoveJourneyMap() {
             </div>
 
             {/* User Profile - Compact & Expandable */}
-            <div className="absolute top-4 left-4 z-[70] sm:top-8 sm:left-8">
+            <div className={cn("absolute top-4 z-[70]", activeIndex === 0 ? "right-[4.5rem] sm:right-[5.25rem]" : "right-4 sm:right-8")}>
                 <div className="relative">
                     {/* Trigger (Avatar) */}
                     <motion.button
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                        type="button"
+                        aria-label="Hồ sơ"
+                        aria-expanded={isProfileOpen}
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
-                        className={cn(
-                            "relative size-11 rounded-full p-1 bg-gradient-to-tr from-rose-500 via-purple-500 to-blue-500 shadow-xl transition-all z-20",
-                            isProfileOpen ? "ring-4 ring-white/10" : ""
-                        )}
+                        className="heart-glass-button relative z-20 size-11 rounded-full p-[3px]"
                     >
-                        <div className="w-full h-full rounded-full overflow-hidden bg-stone-900 border border-white/10 relative">
+                        <div className="relative size-full overflow-hidden rounded-full bg-[#e9d9d7]">
                             {user?.photoURL ? (
                                 <Image
                                     src={user.photoURL}
@@ -193,7 +184,7 @@ export default function LoveJourneyMap() {
                                 />
                             )}
                         </div>
-                        <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-[#1a1a1a] rounded-full shadow-lg" />
+                        <div className="absolute bottom-0 right-0 size-2.5 rounded-full border-2 border-[#fff9f3] bg-[#63846d]" />
                     </motion.button>
 
                     {/* Popover Content */}
@@ -210,10 +201,10 @@ export default function LoveJourneyMap() {
                                 />
 
                                 <motion.div
-                                    initial={{ opacity: 0, scale: 0.9, x: -20, y: -10 }}
+                                    initial={{ opacity: 0, scale: 0.96, y: -6 }}
                                     animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
-                                    exit={{ opacity: 0, scale: 0.9, x: -20, y: -10 }}
-                                    className="absolute top-12 left-0 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-5rem)] overflow-y-auto bg-neutral-900/90 backdrop-blur-3xl border border-white/10 rounded-[32px] p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] z-20"
+                                    exit={{ opacity: 0, scale: 0.96, y: -6 }}
+                                    className={cn("heart-glass-surface heart-glass-profile-menu absolute top-12 z-20 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-5rem)] overflow-y-auto p-6", activeIndex === 0 ? "-right-14" : "right-0")}
                                 >
                                     <div className="space-y-6">
                                         {/* Avatar Edit Section */}
@@ -233,12 +224,13 @@ export default function LoveJourneyMap() {
                                                         </div>
                                                     )}
                                                 </div>
-                                                <label className="absolute bottom-0 right-0 w-8 h-8 bg-rose-500 hover:bg-rose-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-colors border-2 border-neutral-900 z-20">
-                                                    <Camera className="w-4 h-4 text-white" />
+                                                <label className="heart-glass-button absolute bottom-0 right-0 z-20 grid size-9 place-items-center rounded-full focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-[#ffcbe3]" data-glass-variant="dark">
+                                                    <Camera className="size-4" aria-hidden="true" />
                                                     <input
                                                         type="file"
                                                         accept="image/*"
-                                                        className="hidden"
+                                                        className="sr-only"
+                                                        aria-label="Đổi ảnh đại diện"
                                                         onChange={handleUpdateAvatar}
                                                         disabled={updating}
                                                     />
@@ -252,10 +244,13 @@ export default function LoveJourneyMap() {
                                                 <span className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em]">Display Name</span>
                                                 {!isEditingName && (
                                                     <button
+                                                        type="button"
+                                                        aria-label="Đổi tên hiển thị"
                                                         onClick={() => setIsEditingName(true)}
-                                                        className="text-white/20 hover:text-rose-400 transition-colors"
+                                                        className="heart-glass-button grid size-8 place-items-center rounded-lg"
+                                                        data-glass-variant="dark"
                                                     >
-                                                        <Pencil className="w-3 h-3" />
+                                                        <Pencil className="size-3.5" aria-hidden="true" />
                                                     </button>
                                                 )}
                                             </div>
@@ -271,13 +266,16 @@ export default function LoveJourneyMap() {
                                                     <Button
                                                         disabled={updating}
                                                         onClick={handleUpdateName}
-                                                        size="icon" className="h-8 w-8 bg-rose-500 hover:bg-rose-600 rounded-lg shrink-0"
+                                                        aria-label="Lưu tên hiển thị"
+                                                        size="icon" className="size-8 shrink-0 rounded-lg"
                                                     >
                                                         <Check className="w-3.5 h-3.5" />
                                                     </Button>
                                                     <Button
                                                         onClick={() => { setIsEditingName(false); setNewName(user?.displayName || ''); }}
-                                                        variant="ghost" size="icon" className="h-8 w-8 rounded-lg shrink-0 hover:bg-white/5"
+                                                        aria-label="Hủy đổi tên"
+                                                        data-glass-variant="dark"
+                                                        variant="ghost" size="icon" className="size-8 shrink-0 rounded-lg"
                                                     >
                                                         <X className="w-3.5 h-3.5" />
                                                     </Button>
@@ -305,9 +303,10 @@ export default function LoveJourneyMap() {
                                                     await removeSession();
                                                 }
                                             }}
-                                            className="w-full bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 py-6 rounded-2xl transition-all font-bold text-xs flex items-center justify-center gap-2 group"
+                                            data-glass-variant="dark"
+                                            className="w-full gap-2 rounded-2xl py-6 text-xs font-bold"
                                         >
-                                            <LogOut className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                            <LogOut className="size-4" aria-hidden="true" />
                                             Đăng xuất khỏi hệ thống
                                         </Button>
                                     </div>
@@ -318,55 +317,32 @@ export default function LoveJourneyMap() {
                 </div>
             </div>
 
-            <nav aria-label="Các phần của HeartScript" className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50">
+            <nav aria-label="Các phần của HeartScript" className="absolute bottom-[max(12px,env(safe-area-inset-bottom))] md:bottom-6 left-1/2 -translate-x-1/2 z-50">
                 <motion.div
-                    initial={{ y: 100, opacity: 0 }}
+                    initial={reduceMotion ? false : { y: 14, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-                    className="flex items-center gap-2 sm:gap-3 px-3 py-2 sm:py-3 bg-black/35 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/45 transition-colors"
+                    transition={{ duration: reduceMotion ? 0 : .35 }}
+                    className="heart-glass-surface heart-glass-crystal heart-glass-dock flex items-center gap-1 p-1.5 font-[family-name:var(--font-heart-ui)]"
                 >
                     {navItems.map((item, index) => {
                         const Icon = item.icon;
                         const isActive = activeIndex === index;
                         return (
-                            <div key={index} className="relative group">
-                                <button
-                                    type="button"
-                                    aria-label={item.label}
-                                    aria-current={activeIndex === index ? 'page' : undefined}
-                                    onClick={() => scrollToSection(index)}
-                                    className={cn(
-                                        "relative p-3 rounded-full transition-all duration-500 ease-out z-10",
-                                        isActive ? "text-white" : "text-white/40 hover:text-white"
-                                    )}
-                                >
-                                    <div className={cn(
-                                        "absolute inset-0 bg-white/10 rounded-full scale-0 transition-transform duration-300 group-hover:scale-100",
-                                        isActive && "scale-100 bg-white/20"
-                                    )} />
-
-                                    <Icon className={cn(
-                                        "w-5 h-5 transition-transform duration-300",
-                                        isActive ? "scale-110 stroke-[2.5px]" : "group-hover:scale-110"
-                                    )} />
-                                </button>
-
-                                {/* Floating Label */}
-                                <span className={cn(
-                                    "absolute -top-10 left-1/2 -translate-x-1/2 px-3 py-1 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider rounded-lg opacity-0 transform translate-y-2 transition-all duration-300 pointer-events-none border border-white/5",
-                                    "group-hover:opacity-100 group-hover:translate-y-0"
-                                )}>
-                                    {item.label}
-                                </span>
-
-                                {/* Active Glow */}
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="active-glow"
-                                        className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-8 h-1 bg-white/50 blur-md rounded-full"
-                                    />
-                                )}
-                            </div>
+                            <button
+                                key={item.label}
+                                type="button"
+                                aria-current={isActive ? 'page' : undefined}
+                                data-glass-variant="quiet"
+                                onClick={() => scrollToSection(index)}
+                                className="heart-glass-button heart-glass-nav-item relative flex min-h-[46px] min-w-[55px] flex-col items-center justify-center gap-0.5 rounded-full px-1.5 text-[10px] font-semibold sm:min-w-[72px]"
+                            >
+                                {isActive && <motion.span
+                                    layoutId={reduceMotion ? undefined : 'dashboard-nav-active'}
+                                    className="absolute inset-0 rounded-full border border-[#b7799266] bg-[#e8bbd04d] shadow-[inset_0_1px_1px_#fff9]"
+                                />}
+                                <Icon size={17} strokeWidth={isActive ? 2.25 : 1.8} className="relative" aria-hidden="true" />
+                                <span className="relative">{item.label}</span>
+                            </button>
                         );
                     })}
                 </motion.div>
