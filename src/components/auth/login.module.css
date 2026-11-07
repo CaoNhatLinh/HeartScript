@@ -1,0 +1,189 @@
+.page {
+    --ink: #3e2934;
+    --muted: #6f5360;
+    --rose: #8c405c;
+    --serif: var(--font-cormorant), Georgia, serif;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    place-items: center;
+    min-height: 100dvh;
+    padding: 34px 16px;
+    color: var(--ink);
+    background:
+        radial-gradient(ellipse at 0 0, #f1d2d8 0%, transparent 57%),
+        radial-gradient(ellipse at 100% 100%, #e2daec 0%, transparent 60%),
+        #fcf5ee;
+}
+
+.page::before {
+    position: absolute;
+    z-index: -1;
+    inset: clamp(8px, 1.8vw, 25px);
+    border: 1px solid #b7778a45;
+    border-radius: 5px;
+    pointer-events: none;
+    content: '';
+}
+
+.sheet {
+    display: grid;
+    gap: clamp(12px, 3vh, 25px);
+    width: min(100%, 530px);
+}
+
+.heading { text-align: center; }
+
+.brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    color: var(--rose);
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+}
+
+.brand svg { fill: #c9778d70; }
+
+.heading h1 {
+    margin: 0;
+    font: 600 clamp(47px, 11vw, 91px)/.91 var(--serif);
+    letter-spacing: -.045em;
+    text-wrap: balance;
+}
+
+.heading h1 em { color: var(--rose); }
+.heading p { margin: 12px 0 0; color: var(--muted); font-size: 15px; }
+
+.profiles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(8px, 3vw, 19px);
+}
+
+.profile {
+    --accent: #875332;
+    --edge: #a662403f;
+    --paper: #fce5ce;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-width: 0;
+    align-items: center;
+    padding: clamp(10px, 3vw, 18px);
+    border: 1px solid var(--edge);
+    border-radius: 17px;
+    background: radial-gradient(ellipse at 50% 40%, #fffaf3, var(--paper));
+    box-shadow: inset 0 0 0 4px #fffaf35c, 0 14px 30px #794e5e14;
+    text-align: start;
+    touch-action: manipulation;
+    cursor: pointer;
+    transition: transform .22s, border-color .22s, box-shadow .22s;
+}
+
+.profile[data-role='her'] {
+    --accent: #883e59;
+    --edge: #a758743f;
+    --paper: #f6dbe4;
+}
+
+.profile:disabled { cursor: wait; }
+
+.profile:focus-visible, .error a:focus-visible {
+    outline: 2px solid var(--rose);
+    outline-offset: 4px;
+}
+
+@media (hover: hover) {
+    .profile:hover:not(:disabled) {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+        box-shadow: inset 0 0 0 4px #fffaf35c, 0 19px 35px #794e5e24;
+    }
+}
+
+.fruit {
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.mascot {
+    display: block;
+    width: min(100%, 164px);
+    justify-self: center;
+    margin-block: 1px 4px;
+}
+
+.identity {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    padding-top: 6px;
+    border-top: 1px solid var(--edge);
+    font: 650 clamp(29px, 7vw, 45px)/1 var(--serif);
+}
+
+.arrow {
+    display: grid;
+    width: 34px;
+    aspect-ratio: 1;
+    place-items: center;
+    border: 1px solid var(--edge);
+    border-radius: 50%;
+    color: var(--accent);
+}
+
+.google {
+    margin: 0;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.error {
+    padding: 10px 12px;
+    border: 1px solid #a755714f;
+    border-radius: 10px;
+    background: #fffaf6;
+    color: #732d47;
+    text-align: center;
+    font-size: 13px;
+}
+
+.error a {
+    display: flex;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.spinner { animation: spin .8s linear infinite; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-height: 520px) and (orientation: landscape) {
+    .page { padding-block: 20px; }
+    .sheet { gap: 10px; }
+    .heading h1 { font-size: clamp(43px, 10vh, 63px); }
+    .brand { margin-bottom: 6px; }
+    .heading p { margin-top: 5px; }
+    .profile { padding: 8px 13px; }
+    .mascot { width: min(100%, 105px); }
+    .identity { font-size: 31px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .profile { transition: none; }
+    .profile:hover:not(:disabled) { transform: none; }
+    .spinner { animation: none; }
+}

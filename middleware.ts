@@ -5,7 +5,7 @@ export default async function proxy(request: NextRequest) {
     const session = request.cookies.get('session_token');
     const { pathname } = request.nextUrl;
 
-    const publicRoutes = ['/', '/login'];
+    const publicRoutes = ['/'];
     // Check if route is public
     if (publicRoutes.includes(pathname)) {
         // If logged in (has cookie), redirect to dashboard

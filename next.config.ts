@@ -2,6 +2,13 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   transpilePackages: ['three'],
+  async redirects() {
+    return [{
+      source: '/birthday/models/cake.glb',
+      destination: '/birthday/models/cake-citrus.glb?v=heart',
+      permanent: false,
+    }];
+  },
   images: {
     remotePatterns: [
       {

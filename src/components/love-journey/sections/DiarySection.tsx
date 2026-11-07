@@ -603,7 +603,7 @@ export function DiarySection() {
     }, [selectedEntry, isWriting, currentMood]);
 
     return (
-        <section className="h-screen w-screen flex flex-col relative overflow-hidden bg-[#faf9f6] snap-start shrink-0" suppressHydrationWarning>
+        <section className="h-dvh w-screen flex flex-col relative overflow-hidden bg-[#faf9f6] snap-start shrink-0" suppressHydrationWarning>
             {/* Load Fonts */}
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&family=Playwrite+IN+Guides&family=Playwrite+NZ+Basic+Guides&display=swap');
@@ -616,31 +616,31 @@ export function DiarySection() {
             {/* Dynamic Atmosphere */}
             <MoodAtmosphere mood={activeMood} />
 
-            <div className="h-full w-full max-w-4xl mx-auto p-6 md:p-8 flex flex-col relative z-10">
+            <div className="h-full min-h-0 w-full max-w-4xl mx-auto px-4 pt-14 sm:px-8 sm:pt-10 flex flex-col relative z-10">
                 {/* Header Section */}
-                <div className="mb-8 flex-shrink-0">
-                    <div className="flex flex-col items-center text-center mb-8">
+                <div className="mb-4 sm:mb-6 shrink-0">
+                    <div className="flex flex-col items-center text-center mb-3 sm:mb-6">
                         <div className="relative">
-                            <h2 className="text-5xl md:text-6xl font-['Dancing_Script'] font-bold text-stone-800 flex items-center gap-4 justify-center drop-shadow-sm">
+                            <h2 className="text-4xl sm:text-6xl font-['Dancing_Script'] font-bold text-stone-800 flex items-center gap-2 sm:gap-4 justify-center drop-shadow-sm">
                                 <span className="text-rose-400">Our</span> Journal
                             </h2>
-                            <div className="absolute -top-6 -right-8 opacity-20 rotate-12">
-                                <Heart className="w-16 h-16 text-rose-500 fill-rose-500" />
+                            <div className="absolute -top-3 -right-5 sm:-top-6 sm:-right-8 opacity-20 rotate-12 pointer-events-none">
+                                <Heart className="size-10 sm:size-16 text-rose-500 fill-rose-500" />
                             </div>
                         </div>
-                        <p className="text-stone-500 font-['Patrick_Hand'] text-xl mt-2 tracking-wide">
+                        <p className="text-stone-600 font-['Patrick_Hand'] text-sm sm:text-xl mt-2 tracking-wide">
                             Gửi những yêu thương vào từng trang giấy...
                         </p>
                     </div>
 
-                    <div className="flex justify-center gap-4 items-center">
+                    <div className="flex flex-wrap justify-center gap-2 sm:gap-4 items-center">
                         {/* Only HIM can see the Trash Can */}
                         {isHim(user?.email) && (
                             <Button
                                 variant="ghost"
                                 onClick={() => setShowDeletedLogs(!showDeletedLogs)}
                                 className={cn(
-                                    "rounded-full font-['Montserrat'] text-xs uppercase tracking-widest px-6 py-2 transition-all",
+                                    "h-11 rounded-full font-['Montserrat'] text-[11px] sm:text-xs uppercase tracking-wide px-3 sm:px-6 transition-all",
                                     showDeletedLogs
                                         ? "bg-red-100 text-red-500 hover:bg-red-200"
                                         : "text-stone-500 hover:text-stone-700 hover:bg-stone-100"
@@ -655,13 +655,13 @@ export function DiarySection() {
                             <DialogTrigger asChild>
                                 <Button
                                     variant="outline"
-                                    className="rounded-full border-stone-200 text-stone-500 hover:text-stone-800 hover:border-stone-400 hover:bg-white bg-white/50 backdrop-blur-sm p-3 shadow-sm transition-all group"
-                                    title="Couple Settings"
+                                    className="size-11 rounded-full border-stone-200 text-stone-500 hover:text-stone-800 hover:border-stone-400 hover:bg-white bg-white/50 backdrop-blur-sm p-0 shadow-sm transition-all group"
+                                    aria-label="Couple Settings"
                                 >
                                     <Settings className="w-5 h-5 group-hover:rotate-90 transition-transform duration-500" />
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-[500px] bg-[#fffbf0] border-none font-serif max-h-[90vh] overflow-y-auto custom-scrollbar">
+                            <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-[500px] bg-[#fffbf0] border-none font-serif max-h-[90dvh] overflow-y-auto rounded-xl">
                                 <DialogTitle className="font-['Playfair_Display'] text-3xl mb-2 text-stone-800 text-center">
                                     Our Little Settings
                                 </DialogTitle>
@@ -745,7 +745,7 @@ export function DiarySection() {
 
                         <Dialog open={isWriting} onOpenChange={(open) => open ? setIsWriting(true) : handleCloseWrite()}>
                             <DialogTrigger asChild>
-                                <Button className="relative overflow-hidden rounded-full bg-stone-800 text-[#fffcf5] hover:bg-stone-900 font-['Playfair_Display'] px-10 py-6 text-lg shadow-xl shadow-stone-200 transition-all hover:scale-105 active:scale-95 group">
+                                <Button className="relative overflow-hidden rounded-full bg-stone-800 text-[#fffcf5] hover:bg-stone-900 font-['Playfair_Display'] px-4 sm:px-9 h-11 sm:h-12 text-sm sm:text-lg shadow-xl shadow-stone-200 transition-all active:scale-95 group">
                                     <span className="relative z-10 flex items-center">
                                         <PenLine className="w-5 h-5 mr-3 group-hover:rotate-12 transition-transform" />
                                         {editingId ? "Update Love Letter" : "Write a Love Letter"}
@@ -753,9 +753,9 @@ export function DiarySection() {
                                     <div className="absolute inset-0 bg-gradient-to-r from-stone-700 to-stone-900 opacity-0 group-hover:opacity-100 transition-opacity" />
                                 </Button>
                             </DialogTrigger>
-                            <DialogContent className="sm:max-w-3xl bg-[#fffbf0] border-none shadow-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col font-serif">
+                            <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-3xl bg-[#fffbf0] border-none rounded-xl shadow-2xl p-0 overflow-hidden max-h-[90dvh] flex flex-col font-serif">
                                 {/* Header */}
-                                <div className="bg-[#fff9e6] px-8 py-6 border-b border-[#e6e2d1] flex items-center justify-between relative overflow-hidden">
+                                <div className="bg-[#fff9e6] px-4 sm:px-8 pr-14 sm:pr-16 py-4 sm:py-6 border-b border-[#e6e2d1] flex items-center justify-between relative overflow-hidden">
                                     <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]" />
                                     <div>
                                         <DialogTitle className="font-['Playfair_Display'] text-3xl text-stone-800 italic flex items-center gap-3">
@@ -770,7 +770,7 @@ export function DiarySection() {
                                     </div>
                                 </div>
 
-                                <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fffbf0] relative">
+                                <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-[#fffbf0] relative">
                                     <div className="p-8 pb-4">
                                         <div className="relative group">
                                             {/* Precise Lines Background */}
@@ -845,7 +845,7 @@ export function DiarySection() {
                                     </div>
                                 </div>
 
-                                <div className="p-6 bg-white border-t border-stone-100 flex justify-between items-center z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
+                                <div className="p-3 sm:p-6 bg-white border-t border-stone-100 flex flex-wrap gap-2 justify-between items-center z-20 shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)]">
                                     <div>
                                         <input
                                             ref={fileInputRef}
@@ -858,17 +858,17 @@ export function DiarySection() {
                                         <Button
                                             variant="ghost"
                                             onClick={() => fileInputRef.current?.click()}
-                                            className="text-stone-500 hover:text-stone-800 hover:bg-stone-100 rounded-xl"
+                                            className="h-11 px-2 sm:px-4 text-stone-600 hover:text-stone-800 hover:bg-stone-100 rounded-xl text-xs sm:text-sm"
                                         >
-                                            <Paperclip className="w-5 h-5 mr-2" />
-                                            Attach Photos/Videos
+                                            <Paperclip className="w-4 h-4 mr-1 sm:mr-2" />
+                                            Đính kèm
                                         </Button>
                                     </div>
 
                                     <Button
                                         onClick={handleSubmit}
                                         disabled={!newEntry.trim() && tempMedia.length === 0}
-                                        className="rounded-full bg-stone-800 text-[#fffcf5] hover:bg-black px-8 py-6 shadow-lg shadow-stone-200 transition-all hover:-translate-y-1 disabled:opacity-50 disabled:hover:translate-y-0 font-['Montserrat'] tracking-wide uppercase text-xs font-bold"
+                                        className="h-11 rounded-full bg-stone-800 text-[#fffcf5] hover:bg-black px-4 sm:px-8 shadow-lg shadow-stone-200 transition-all disabled:opacity-50 font-['Montserrat'] tracking-wide uppercase text-xs font-bold"
                                     >
                                         <Send className="w-4 h-4 mr-2" /> Send Letter
                                     </Button>
@@ -876,9 +876,10 @@ export function DiarySection() {
                             </DialogContent>
                         </Dialog>
                     </div>
+                </div>
 
                     {/* Journal List or Deleted Logs */}
-                    <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-8 pb-32">
+                    <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden px-1 pt-3 space-y-6 pb-28">
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-20 gap-4">
                                 <Loader2 className="w-8 h-8 animate-spin text-rose-400" />
@@ -920,10 +921,10 @@ export function DiarySection() {
                                 <p className="font-['Dancing_Script'] text-2xl">Chưa có lá thư nào cả. Viết lá thư đầu tiên đi nè!</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 content-start">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 content-start">
                                 {displayedEntries.map((entry, idx) => {
                                     const him = isHim(entry.authorEmail);
-                                    const rotation = idx % 2 === 0 ? '-rotate-1' : 'rotate-1';
+                                    const rotation = idx % 2 === 0 ? 'md:-rotate-1' : 'md:rotate-1';
                                     const mood = entry.mood || detectMood(entry.text) || 'default';
                                     const moodConfig = MOODS[mood];
 
@@ -933,7 +934,7 @@ export function DiarySection() {
                                             initial={{ opacity: 0, y: 30 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.6, delay: idx * 0.1 }}
-                                            className={cn("group relative", rotation, "hover:rotate-0 transition-transform duration-500")}
+                                            className={cn("group relative min-w-0 overflow-hidden", rotation, "hover:rotate-0 transition-transform duration-500")}
                                             onClick={() => setSelectedEntry(entry)}
                                         >
                                             {/* Cute Tape Effect */}
@@ -949,7 +950,7 @@ export function DiarySection() {
 
                                             {/* Main Card - Postcard Style */}
                                             <div className={cn(
-                                                "relative bg-[#fffbf0] rounded-sm p-6 shadow-[2px_4px_16px_-2px_rgba(0,0,0,0.08)] cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-[4px_8px_24px_-4px_rgba(0,0,0,0.12)] border border-[#f0ebe0]",
+                                                "relative bg-[#fffbf0] rounded-sm p-4 sm:p-6 shadow-[2px_4px_16px_-2px_rgba(0,0,0,0.08)] cursor-pointer overflow-hidden transition-all duration-300 hover:shadow-[4px_8px_24px_-4px_rgba(0,0,0,0.12)] border border-[#f0ebe0]",
                                                 "after:absolute after:inset-0 after:border-2 after:border-dashed after:border-stone-200 after:rounded-sm after:m-2 after:pointer-events-none",
                                                 `bg-gradient-to-br ${moodConfig.color}`
                                             )}>
@@ -1050,11 +1051,10 @@ export function DiarySection() {
                             </div>
                         )}
                     </div>
-                </div>
                 <Dialog open={!!selectedEntry} onOpenChange={(open) => !open && setSelectedEntry(null)}>
-                    <DialogContent className="sm:max-w-3xl bg-[#fffbf0] border-none shadow-2xl p-0 overflow-hidden max-h-[90vh] flex flex-col font-serif">
+                    <DialogContent className="w-[calc(100%-1.5rem)] sm:max-w-3xl bg-[#fffbf0] border-none rounded-xl shadow-2xl p-0 overflow-hidden max-h-[90dvh] flex flex-col font-serif">
                         {/* Header */}
-                        <div className="bg-[#fff9e6] px-8 py-6 border-b border-[#e6e2d1] flex items-center justify-between relative overflow-hidden">
+                        <div className="bg-[#fff9e6] px-4 sm:px-8 pr-14 sm:pr-16 py-4 sm:py-6 border-b border-[#e6e2d1] flex items-center justify-between relative overflow-hidden">
                             <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/cream-paper.png')]" />
                             <div className="flex items-center gap-4 relative z-10">
                                 <div className={cn(
@@ -1092,7 +1092,7 @@ export function DiarySection() {
                             </div>
                         </div>
 
-                        <div className="flex-1 relative overflow-hidden flex flex-col bg-[#fffbf0]">
+                        <div className="flex-1 min-h-0 relative overflow-hidden flex flex-col bg-[#fffbf0]">
                             {/* Mood Atmosphere - Absolute Background Layer */}
                             <div className="absolute inset-0 pointer-events-none z-0">
                                 <MoodAtmosphere mood={(!selectedEntry?.mood || selectedEntry?.mood === 'default') ? detectMood(selectedEntry?.text || '') : selectedEntry.mood} />
@@ -1140,8 +1140,8 @@ export function DiarySection() {
                             </div>
                         </div>
 
-                        <div className="p-6 bg-white border-t border-stone-100 flex justify-between items-center shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] relative z-20">
-                            <div className="flex gap-4 items-center">
+                        <div className="p-3 sm:p-6 bg-white border-t border-stone-100 flex flex-wrap gap-2 justify-between items-center shadow-[0_-10px_40px_-15px_rgba(0,0,0,0.05)] relative z-20">
+                            <div className="flex gap-1 sm:gap-4 items-center">
                                 {user?.uid === selectedEntry?.authorId && (
                                     <>
                                         <Button
@@ -1204,7 +1204,7 @@ export function DiarySection() {
             </div>
 
             {/* Right Side Exploration Hint */}
-            <div className="absolute top-1/2 right-4 -translate-y-1/2 z-20">
+            <div className="hidden xl:block absolute top-1/2 right-4 -translate-y-1/2 z-20">
                 <motion.button
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}

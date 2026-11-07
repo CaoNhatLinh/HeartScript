@@ -1,7 +1,15 @@
 {
   "rules": {
     ".read": true,
-    ".write": true,
+    "$section": {
+      ".write": "$section !== 'memories'"
+    },
+    "memories": {
+      ".indexOn": "createdAt",
+      "$memoryId": {
+        ".write": "auth != null && auth.token.email_verified === true && (auth.token.email === 'caonhatlinh4@gmail.com' || auth.token.email === 'ngocnguyenntp2003@gmail.com') && ((!data.exists() && newData.child('userId').val() === auth.uid) || (!newData.exists() && (auth.token.email === 'caonhatlinh4@gmail.com' || data.child('userId').val() === auth.uid)))"
+      }
+    },
     "journal": {
       ".indexOn": "createdAt"
     },

@@ -3,9 +3,9 @@
 import { useCollection } from '@/hooks/useCollection';
 import { Project } from '@/types';
 import { useAuthStore } from '@/store/useAuthStore';
-import { Code as CodeIcon, Terminal, Plus, ExternalLink, Wand2, Eye, EyeOff, Maximize2, Trash2, Clock, Lock, Unlock, X, Loader2 } from 'lucide-react';
+import { Code as CodeIcon, Terminal, ExternalLink, Wand2, Eye, EyeOff, Maximize2, Trash2, Clock, Lock, Unlock, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { push, ref, set, update, remove, query, orderByChild } from 'firebase/database';
+import { ref, update, remove, query, orderByChild } from 'firebase/database';
 import { rtdb } from '@/lib/firebase';
 import { useState, useEffect, useCallback, memo } from 'react';
 import { createPortal } from 'react-dom';
@@ -13,6 +13,8 @@ import { HIM_EMAILS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import dynamic from 'next/dynamic';
+import { useRouter } from 'next/navigation';
+import { birthdayProject } from '../miniprojects/birthday/birthday-release';
 
 // Dynamic Import for heavy 3D components to avoid hydration issues and initial bundle bloat
 const ValentineEntry = dynamic(() => import('../miniprojects/valentine/ValentineEntry'), {
@@ -24,7 +26,6 @@ const ValentineEntry = dynamic(() => import('../miniprojects/valentine/Valentine
     ),
     ssr: false // 3D is client-only
 });
-
 // --- COMPONENTS ---
 
 // Optimized Fullscreen Portal with Cleanup
@@ -86,6 +87,7 @@ const FullscreenOverlay = memo(({ project, onClose }: { project: Project; onClos
 FullscreenOverlay.displayName = 'FullscreenOverlay';
 
 export function ProjectsSection() {
+    const router = useRouter();
     const { user } = useAuthStore();
     const { data: projects, loading } = useCollection<Project>('projects', (qRef) =>
         query(qRef, orderByChild('createdAt'))
@@ -107,18 +109,22 @@ export function ProjectsSection() {
 
     const isHim = user?.email && HIM_EMAILS.includes(user.email);
     const dbProjects = [...projects].reverse();
-    const availableMiniProjects = ['valentine-3d'];
 
     // Merge system projects with DB config
     const visibleProjects = (() => {
-        const defaultSpecialProjects: Project[] = availableMiniProjects.map(id => ({
-            id,
-            title: id === 'valentine-3d' ? 'Valentine 3D Room' : 'Unknown Project',
-            description: id === 'valentine-3d' ? 'A magical 3D world with roses, floating memories and interactive gifts.' : 'Description not available',
+        const defaultSpecialProjects: Project[] = [{
+            id: 'valentine-3d',
+            title: 'Valentine 3D Room',
+            description: 'A magical 3D world with roses, floating memories and interactive gifts.',
+            createdAt: 1707868800000,
+        }, {
+            ...birthdayProject,
+            createdAt: Date.UTC(2026, 10, 7),
+        }].map(project => ({
+            ...project,
             code: '',
             type: 'react' as const,
-            isVisibleToHer: false,
-            createdAt: 1707868800000,
+            isVisibleToHer: project.id === birthdayProject.id,
             userId: 'system'
         }));
 
@@ -135,6 +141,14 @@ export function ProjectsSection() {
     })();
 
     // --- ACTIONS ---
+
+    const handleOpenFullscreen = (project: Project) => {
+        if (project.id === birthdayProject.id) {
+            router.push(`/miniproject/${project.id}`);
+            return;
+        }
+        setActiveFullscreenProject(project);
+    };
 
     const handleOpenPopup = useCallback((project: Project) => {
         const width = Math.min(window.screen.width * 0.9, 1600);
@@ -184,21 +198,6 @@ export function ProjectsSection() {
         }
     };
 
-    const handleCreate = async () => {
-        if (!user) return;
-        const newRef = push(ref(rtdb, 'projects'));
-        await set(newRef, {
-            title: 'New Love Spell',
-            description: 'A magical interaction for us.',
-            code: '<h1>New Magic</h1>',
-            type: 'html',
-            isVisibleToHer: false,
-            createdAt: Date.now(),
-            unlockDate: null,
-            userId: user.uid
-        });
-    };
-
     const toggleVisibility = async (project: Project) => {
         if (!project.id) return;
         await update(ref(rtdb, `projects/${project.id}`), { isVisibleToHer: !project.isVisibleToHer });
@@ -209,30 +208,25 @@ export function ProjectsSection() {
     };
 
     return (
-        <section className="h-screen w-screen flex flex-col items-center justify-center bg-zinc-950 snap-start shrink-0 relative border-l border-zinc-800" suppressHydrationWarning>
+        <section className="h-dvh w-screen flex flex-col items-center bg-zinc-950 snap-start shrink-0 relative overflow-hidden border-l border-zinc-800" suppressHydrationWarning>
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-zinc-950 to-zinc-950 pointer-events-none" />
 
-            <div className="z-10 w-full max-w-6xl p-8 h-full flex flex-col justify-center">
+            <div className="z-10 w-full max-w-6xl h-full min-h-0 px-4 pt-[4.75rem] sm:px-8 lg:pt-10 flex flex-col">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-8 shrink-0">
+                <div className="mb-5 sm:mb-8 shrink-0">
                     <div>
-                        <h2 className="text-3xl font-mono font-bold text-indigo-400 flex items-center gap-3">
-                            <Terminal className="w-8 h-8" />
+                        <h2 className="text-2xl sm:text-3xl font-mono font-bold text-indigo-400 flex items-center gap-2 sm:gap-3">
+                            <Terminal className="size-6 sm:size-8 shrink-0" />
                             {isHim ? 'Control Center' : 'Our Creations'}
                         </h2>
                         <p className="text-zinc-500 font-mono mt-2 text-sm">
                             {isHim ? '> System Status: Online. Ready to code.' : '> Exploring our digital universe...'}
                         </p>
                     </div>
-                    {isHim && (
-                        <Button onClick={handleCreate} className="bg-indigo-600 hover:bg-indigo-700 text-white font-mono">
-                            <Plus className="w-4 h-4 mr-2" /> New Project
-                        </Button>
-                    )}
                 </div>
 
                 {/* Project List */}
-                <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden pb-28">
                     {loading ? (
                         <div className="flex items-center justify-center h-40 text-zinc-600 font-mono gap-3">
                             <Loader2 className="w-5 h-5 animate-spin" />
@@ -257,21 +251,22 @@ export function ProjectsSection() {
                                     "from-orange-400 via-pink-500 to-purple-500"
                                 ];
                                 const gradient = gradients[index % gradients.length];
-                                const isLocked = project.unlockDate && (project.unlockDate as number) > currentTime;
+                                const isBirthday = project.id === birthdayProject.id;
+                                const isLocked = !isBirthday && project.unlockDate && (project.unlockDate as number) > currentTime;
 
                                 return isHim ? (
                                     // HIM VIEW (Admin List)
-                                    <div key={project.id} className="bg-zinc-900/80 border border-zinc-800 p-4 rounded-lg flex items-center justify-between group hover:border-indigo-500/30 transition-colors">
-                                        <div className="flex items-center gap-4">
-                                            <div className={cn("w-2 h-2 rounded-full", project.isVisibleToHer ? "bg-green-500 shadow-[0_0_10px_#22c55e]" : "bg-orange-500")} />
+                                    <div key={project.id} className="bg-zinc-900/80 border border-zinc-800 p-3 sm:p-4 rounded-lg flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 group hover:border-indigo-500/30 transition-colors">
+                                        <div className="min-w-0 flex items-center gap-3">
+                                            <div className={cn("size-2 shrink-0 rounded-full", project.isVisibleToHer ? "bg-green-500 shadow-[0_0_10px_#22c55e]" : "bg-orange-500")} />
                                             {isLocked && <Lock className="w-4 h-4 text-yellow-500" />}
-                                            <div>
-                                                <h3 className="font-mono text-zinc-200 font-bold">{project.title}</h3>
-                                                <p className="text-xs text-zinc-500 truncate max-w-[300px]">{project.description}</p>
+                                            <div className="min-w-0">
+                                                <h3 className="font-mono text-zinc-200 font-bold break-words">{project.title}</h3>
+                                                <p className="text-xs text-zinc-400 break-words">{project.description}</p>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <Button
+                                        <div className="flex flex-wrap items-center gap-1 sm:gap-2 shrink-0 [&>button]:size-11">
+                                            {!isBirthday && <Button
                                                 size="icon"
                                                 variant="ghost"
                                                 onClick={() => project.unlockDate ? handleCancelSchedule(project.id!) : setScheduleProject(project)}
@@ -279,13 +274,13 @@ export function ProjectsSection() {
                                                 title={project.unlockDate ? "Cancel Schedule" : "Set Schedule"}
                                             >
                                                 {project.unlockDate ? <Unlock className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-                                            </Button>
+                                            </Button>}
 
                                             {/* DIRECT ACCESS BUTTONS (HIM) */}
                                             <Button
                                                 size="icon"
                                                 variant="ghost"
-                                                onClick={() => setActiveFullscreenProject(project)}
+                                                onClick={() => handleOpenFullscreen(project)}
                                                 className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/20"
                                                 title="Open Fullscreen"
                                             >
@@ -305,6 +300,7 @@ export function ProjectsSection() {
                                                 size="icon"
                                                 variant="ghost"
                                                 onClick={() => toggleVisibility(project)}
+                                                aria-label={project.isVisibleToHer ? 'Hide project' : 'Show project'}
                                                 className={cn(project.isVisibleToHer ? "text-green-500 hover:text-green-400" : "text-zinc-500 hover:text-zinc-400")}
                                             >
                                                 {project.isVisibleToHer ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
@@ -313,6 +309,7 @@ export function ProjectsSection() {
                                                 size="icon"
                                                 variant="ghost"
                                                 onClick={() => handleDelete(project.id)}
+                                                aria-label="Delete project"
                                                 className="text-red-900 hover:text-red-500 hover:bg-red-950/30"
                                             >
                                                 <Trash2 className="w-4 h-4" />
@@ -355,11 +352,11 @@ export function ProjectsSection() {
                                                     <div className="flex gap-2">
                                                         {/* DIRECT ACCESS BUTTONS (HER) */}
                                                         <Button
-                                                            onClick={() => setActiveFullscreenProject(project)}
+                                                            onClick={() => handleOpenFullscreen(project)}
                                                             className="flex-1 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 hover:border-emerald-500/30 transition-all font-medium text-xs group/btn relative overflow-hidden h-10"
                                                         >
                                                             <span className="relative z-10 flex items-center justify-center">
-                                                                Fullscreen <Maximize2 className="w-3 h-3 ml-2 group-hover/btn:scale-110 transition-transform" />
+                                                                {isBirthday ? 'Mở quà' : 'Fullscreen'} <Maximize2 className="w-3 h-3 ml-2 group-hover/btn:scale-110 transition-transform" />
                                                             </span>
                                                         </Button>
                                                         <Button

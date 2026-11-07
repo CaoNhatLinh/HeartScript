@@ -1,69 +1,19 @@
 'use client';
 
-import { addDoc, collection, deleteDoc, doc, orderBy, Timestamp, updateDoc } from 'firebase/firestore';
+import { deleteDoc, doc, orderBy, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { useAuthStore } from '@/store/useAuthStore';
-import Link from 'next/link';
-import { Plus, Trash2, Code, Box, Wand2, Lock, Clock } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { Trash2, Code, Box, Wand2, Lock, Clock } from 'lucide-react';
 import { useFirestoreCollection } from '@/hooks/useCollection';
 import { Project } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 
 export default function ProjectsPage() {
-    const { user } = useAuthStore();
-    const router = useRouter();
 
     const { data: projects, loading } = useFirestoreCollection<Project>('projects', [
         orderBy('createdAt', 'desc')
     ]);
-
-    const [unlockDate, setUnlockDate] = useState<string>('');
-
-    const createProject = async () => {
-        const unlockTimestamp = unlockDate ? Timestamp.fromDate(new Date(unlockDate)) : null;
-
-        if (!confirm('Start a new creative project?')) return;
-
-        try {
-            const docRef = await addDoc(collection(db, 'projects'), {
-                title: 'New Love Project',
-                description: 'A magical place for code',
-                code: `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { margin: 0; background: #FFF0F5; color: #DB7093; display: flex; justify-content: center; align-items: center; height: 100vh; font-family: sans-serif; }
-    h1 { animation: heartbeat 1.5s infinite; }
-    @keyframes heartbeat {
-      0% { transform: scale(1); }
-      25% { transform: scale(1.1); }
-      50% { transform: scale(1); }
-      75% { transform: scale(1.1); }
-      100% { transform: scale(1); }
-    }
-  </style>
-</head>
-<body>
-  <h1>Hello, My Love! 💖</h1>
-</body>
-</html>`,
-                type: 'html',
-                createdAt: Timestamp.now(),
-                unlockDate: unlockTimestamp,
-                userId: user?.uid
-            });
-            router.push(`/dashboard/projects/${docRef.id}`);
-            setUnlockDate(''); // Reset
-        } catch (error) {
-            console.error("Error creating project:", error);
-            alert('Failed to create project');
-        }
-    };
 
     const deleteProject = async (id: string, e: React.MouseEvent) => {
         e.preventDefault();
@@ -97,23 +47,6 @@ export default function ProjectsPage() {
                     </h1>
                     <p className="text-muted-foreground mt-1 text-center md:text-left">Build little wishes and surprises with code.</p>
                 </div>
-                <div className="flex flex-col gap-2">
-                    <label className="text-sm font-medium text-gray-700">Unlock Date (optional)</label>
-                    <Input
-                        type="datetime-local"
-                        value={unlockDate}
-                        onChange={(e) => setUnlockDate(e.target.value)}
-                        className="w-full md:w-64"
-                        placeholder="Set unlock date"
-                    />
-                </div>
-                <Button
-                    onClick={createProject}
-                    className="bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-200 text-white rounded-full px-6"
-                >
-                    <Plus className="w-4 h-4 mr-2" />
-                    New Project
-                </Button>
             </div>
 
             {loading ? (
@@ -129,7 +62,6 @@ export default function ProjectsPage() {
                     </div>
                     <h3 className="text-xl font-semibold text-gray-700">No projects yet</h3>
                     <p className="text-gray-400 mb-6">Start coding something special for us.</p>
-                    <Button variant="outline" onClick={createProject}>Create First Project</Button>
                 </div>
             ) : (
                 <motion.div

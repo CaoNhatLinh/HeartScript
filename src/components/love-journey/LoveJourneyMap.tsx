@@ -6,7 +6,6 @@ import {
     Home,
     BookHeart,
     Image as ImageIcon,
-    Calendar,
     Terminal,
     LogOut,
     Pencil,
@@ -18,7 +17,6 @@ import { cn } from '@/lib/utils';
 import { WelcomeSection } from './sections/WelcomeSection';
 import { DiarySection } from './sections/DiarySection';
 import { MemoriesSection } from './sections/MemoriesSection';
-import { CalendarSection } from './sections/CalendarSection';
 import { ProjectsSection } from './sections/ProjectsSection';
 import { useAuthStore } from '@/store/useAuthStore';
 import { auth } from '@/lib/firebase';
@@ -34,7 +32,6 @@ const SECTION_THEMES = [
     { from: 'from-neutral-900/0', to: 'to-mid-900/0' }, // Home
     { from: 'from-rose-200/20', to: 'to-orange-100/20' }, // Journal
     { from: 'from-purple-200/20', to: 'to-pink-100/20' }, // Memories
-    { from: 'from-blue-200/20', to: 'to-cyan-100/20' }, // Plans
     { from: 'from-indigo-200/20', to: 'to-violet-100/20' }, // Projects
 ];
 
@@ -122,12 +119,11 @@ export default function LoveJourneyMap() {
         { icon: Home, label: 'Home' },
         { icon: BookHeart, label: 'Journal' },
         { icon: ImageIcon, label: 'Memories' },
-        { icon: Calendar, label: 'Plans' },
         { icon: Terminal, label: 'Magic' },
     ];
 
     return (
-        <div className="relative w-screen h-screen bg-neutral-900 overflow-hidden font-sans" suppressHydrationWarning>
+        <div className="relative w-screen h-dvh bg-neutral-900 overflow-hidden font-sans" suppressHydrationWarning>
             <div className="absolute top-0 left-0 right-0 h-1 bg-white/10 z-[60]" suppressHydrationWarning>
                 <motion.div
                     style={{ scaleX, originX: 0 }}
@@ -162,15 +158,12 @@ export default function LoveJourneyMap() {
                 {/* 3. Visual: Memories */}
                 <div id="section-2" className="snap-start shrink-0"><MemoriesSection /></div>
 
-                {/* 4. Planning: Calendar */}
-                <div id="section-3" className="snap-start shrink-0"><CalendarSection /></div>
-
-                {/* 5. Building: Projects */}
-                <div id="section-4" className="snap-start shrink-0"><ProjectsSection /></div>
+                {/* 4. Building: Projects */}
+                <div id="section-3" className="snap-start shrink-0"><ProjectsSection /></div>
             </div>
 
             {/* User Profile - Compact & Expandable */}
-            <div className="absolute top-8 left-8 z-[70]">
+            <div className="absolute top-4 left-4 z-[70] sm:top-8 sm:left-8">
                 <div className="relative">
                     {/* Trigger (Avatar) */}
                     <motion.button
@@ -178,7 +171,7 @@ export default function LoveJourneyMap() {
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setIsProfileOpen(!isProfileOpen)}
                         className={cn(
-                            "relative w-10 h-10 rounded-full p-1 bg-gradient-to-tr from-rose-500 via-purple-500 to-blue-500 shadow-xl transition-all z-20",
+                            "relative size-11 rounded-full p-1 bg-gradient-to-tr from-rose-500 via-purple-500 to-blue-500 shadow-xl transition-all z-20",
                             isProfileOpen ? "ring-4 ring-white/10" : ""
                         )}
                     >
@@ -220,7 +213,7 @@ export default function LoveJourneyMap() {
                                     initial={{ opacity: 0, scale: 0.9, x: -20, y: -10 }}
                                     animate={{ opacity: 1, scale: 1, x: 0, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.9, x: -20, y: -10 }}
-                                    className="absolute top-12 left-0 w-72 bg-neutral-900/90 backdrop-blur-3xl border border-white/10 rounded-[32px] p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] z-20"
+                                    className="absolute top-12 left-0 w-72 max-w-[calc(100vw-2rem)] max-h-[calc(100dvh-5rem)] overflow-y-auto bg-neutral-900/90 backdrop-blur-3xl border border-white/10 rounded-[32px] p-6 shadow-[0_30px_60px_-15px_rgba(0,0,0,0.5)] z-20"
                                 >
                                     <div className="space-y-6">
                                         {/* Avatar Edit Section */}
@@ -325,12 +318,12 @@ export default function LoveJourneyMap() {
                 </div>
             </div>
 
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-50">
+            <nav aria-label="Các phần của HeartScript" className="absolute bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-50">
                 <motion.div
                     initial={{ y: 100, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-                    className="flex items-center gap-3 px-3 py-3 bg-black/20 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/30 transition-colors"
+                    className="flex items-center gap-2 sm:gap-3 px-3 py-2 sm:py-3 bg-black/35 backdrop-blur-xl border border-white/10 rounded-full shadow-[0_8px_32px_0_rgba(0,0,0,0.3)] hover:bg-black/45 transition-colors"
                 >
                     {navItems.map((item, index) => {
                         const Icon = item.icon;
@@ -338,6 +331,9 @@ export default function LoveJourneyMap() {
                         return (
                             <div key={index} className="relative group">
                                 <button
+                                    type="button"
+                                    aria-label={item.label}
+                                    aria-current={activeIndex === index ? 'page' : undefined}
                                     onClick={() => scrollToSection(index)}
                                     className={cn(
                                         "relative p-3 rounded-full transition-all duration-500 ease-out z-10",
@@ -374,7 +370,7 @@ export default function LoveJourneyMap() {
                         );
                     })}
                 </motion.div>
-            </div>
+            </nav>
         </div>
     );
 }

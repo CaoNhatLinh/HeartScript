@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useRouter, usePathname } from 'next/navigation';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
-    const { setUser, setLoading, user } = useAuthStore();
+    const { setUser, setLoading } = useAuthStore();
     const router = useRouter();
     const pathname = usePathname();
 
@@ -18,9 +18,7 @@ export default function AuthProvider({ children }: { children: React.ReactNode }
 
             // Basic route protection
             if (!currentUser && pathname.startsWith('/dashboard')) {
-                router.push('/');
-            } else if (currentUser && pathname === '/') {
-                router.push('/dashboard');
+                router.replace('/login');
             }
         });
 

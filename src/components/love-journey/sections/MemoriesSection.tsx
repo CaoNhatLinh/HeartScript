@@ -9,10 +9,11 @@ import { Memory } from '@/types';
 import Masonry from 'react-masonry-css';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
-import { ImagePlus, Loader2, X, Upload, Plus, ChevronRight, Heart, PartyPopper, Sparkles } from 'lucide-react';
+import { ImagePlus, Loader2, X, Upload, Plus, Heart, PartyPopper, Sparkles } from 'lucide-react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { MemoryCard } from './components/MemoryCard';
+import { HIM_EMAILS } from '@/lib/constants';
 import {
     Dialog,
     DialogContent,
@@ -31,6 +32,7 @@ export function MemoriesSection() {
     const displayedMemories = [...memories].reverse();
     const [uploading, setUploading] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
+    const [deletionError, setDeletionError] = useState(false);
     const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string }[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -124,30 +126,39 @@ export function MemoriesSection() {
         }
     };
 
-    const handleDelete = async (e: React.MouseEvent, id: string) => {
-        e.stopPropagation();
-        if (!window.confirm("Xóa khoảnh khắc này mãi mãi? [Icon: AlertTriangle]")) return;
+    const canDelete = (memory: Memory) =>
+        !!user && (user.uid === memory.userId || HIM_EMAILS.includes(user.email ?? ''));
 
+    const handleDelete = async (e: React.MouseEvent, memory: Memory) => {
+        e.stopPropagation();
+        if (!canDelete(memory) || !window.confirm('Xóa ảnh này khỏi Sweet Moments?')) return;
+
+        setDeletionError(false);
         try {
-            await remove(ref(rtdb, `memories/${id}`));
-        } catch (err) {
-            console.error("Failed to delete memory:", err);
+            await remove(ref(rtdb, `memories/${memory.id}`));
+        } catch {
+            setDeletionError(true);
         }
     };
 
     return (
-        <section className="h-screen w-screen flex flex-col relative overflow-hidden bg-[#fff0f5] snap-start shrink-0" suppressHydrationWarning>
+        <section className="h-dvh w-screen flex flex-col relative overflow-hidden bg-[#fff0f5] snap-start shrink-0" suppressHydrationWarning>
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&family=Patrick+Hand&family=Montserrat:wght@300;400;500&display=swap');
                 
                 .my-masonry-grid {
                     display: flex;
-                    margin-left: -30px;
+                    margin-left: -14px;
                     width: auto;
                 }
                 .my-masonry-grid_column {
-                    padding-left: 30px;
+                    padding-left: 14px;
+                    min-width: 0;
                     background-clip: padding-box;
+                }
+                @media (min-width: 768px) {
+                    .my-masonry-grid { margin-left: -24px; }
+                    .my-masonry-grid_column { padding-left: 24px; }
                 }
             `}</style>
 
@@ -170,33 +181,33 @@ export function MemoriesSection() {
                 ))}
             </div>
 
-            <div className="z-10 w-full max-w-7xl mx-auto px-6 md:px-12 flex flex-col h-full py-12">
-                <div className="flex justify-between items-end mb-12">
+            <div className="z-10 w-full max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col h-full min-h-0 pt-[4.75rem] lg:pt-10">
+                <div className="flex flex-wrap justify-between items-end gap-3 mb-4 sm:mb-8 shrink-0">
                     <div>
                         <div className="flex items-center gap-3 mb-2">
-                            <h2 className="text-6xl md:text-7xl font-['Dancing_Script'] font-bold text-rose-500 drop-shadow-sm flex items-center gap-4">
+                            <h2 className="text-4xl sm:text-6xl lg:text-7xl font-['Dancing_Script'] font-bold text-rose-500 drop-shadow-sm flex items-center gap-2 sm:gap-4">
                                 Sweet Moments
                                 <motion.div animate={{ rotate: [0, 10, -10, 0], scale: [1, 1.1, 1] }} transition={{ duration: 3, repeat: Infinity }}>
-                                    <Sparkles className="w-8 h-8 text-yellow-400" />
+                                    <Sparkles className="size-6 sm:size-8 text-yellow-400" />
                                 </motion.div>
                             </h2>
                         </div>
-                        <p className="text-stone-500 font-['Playfair_Display'] italic text-xl mt-2 border-l-4 border-rose-300 pl-4 py-1">
+                        <p className="text-stone-600 font-['Playfair_Display'] italic text-sm sm:text-xl mt-2 border-l-2 sm:border-l-4 border-rose-300 pl-3 py-1">
                             &quot;Mỗi bức ảnh là một nhịp đập của trái tim...&quot;
                         </p>
                     </div>
 
                     <Dialog open={isAdding} onOpenChange={setIsAdding}>
                         <DialogTrigger asChild>
-                            <Button variant="outline" className="bg-white/80 backdrop-blur-sm border-rose-200 text-rose-500 hover:bg-rose-50 hover:text-rose-600 rounded-full px-6 py-6 shadow-sm transition-all hover:-translate-y-1 font-['Montserrat'] font-bold text-xs uppercase tracking-widest">
+                            <Button variant="outline" className="bg-white/80 backdrop-blur-sm border-rose-200 text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-full px-4 sm:px-6 h-11 shadow-sm font-['Montserrat'] font-bold text-xs uppercase tracking-widest">
                                 <ImagePlus className="w-4 h-4 mr-2" />
                                 Add Memories
                             </Button>
                         </DialogTrigger>
-                        <DialogContent className="bg-[#fffbf0] border-none text-stone-800 sm:max-w-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90vh] font-serif shadow-2xl">
+                        <DialogContent className="w-[calc(100%-1.5rem)] bg-[#fffbf0] border-none text-stone-800 sm:max-w-2xl rounded-3xl overflow-hidden flex flex-col max-h-[90dvh] p-0 font-serif shadow-2xl">
                             <div className="absolute inset-0 opacity-[0.4] bg-[url('https://www.transparenttextures.com/patterns/natural-paper.png')] pointer-events-none" />
-                            <DialogHeader className="relative z-10 p-6 md:p-8 pb-2">
-                                <DialogTitle className="text-3xl font-['Playfair_Display'] font-bold flex items-center gap-2 text-rose-500 italic">
+                            <DialogHeader className="relative z-10 px-4 pt-5 pr-14 sm:px-8 sm:pr-14">
+                                <DialogTitle className="text-xl sm:text-3xl font-['Playfair_Display'] font-bold flex items-center gap-2 text-rose-600 italic">
                                     <PartyPopper className="w-6 h-6" /> Create New Moments
                                 </DialogTitle>
                                 <DialogDescription className="text-stone-500 font-['Montserrat'] text-xs uppercase tracking-wider">
@@ -204,14 +215,14 @@ export function MemoriesSection() {
                                 </DialogDescription>
                             </DialogHeader>
 
-                            <div className="flex-1 overflow-y-auto p-8 pt-4 min-h-[300px] custom-scrollbar relative z-10">
+                            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-8 relative z-10">
                                 {pendingFiles.length === 0 ? (
-                                    <div onClick={() => fileInputRef.current?.click()} className="h-full min-h-[300px] border-2 border-dashed border-rose-200 rounded-3xl flex flex-col items-center justify-center space-y-4 cursor-pointer hover:bg-rose-50/50 transition-colors group">
+                                    <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full min-h-36 sm:min-h-52 p-3 border-2 border-dashed border-rose-200 rounded-3xl flex flex-col items-center justify-center space-y-3 cursor-pointer hover:bg-rose-50/50 transition-colors group">
                                         <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-300 group-hover:scale-110 transition-transform shadow-sm">
                                             <Upload className="w-8 h-8" />
                                         </div>
                                         <p className="text-stone-400 font-['Patrick_Hand'] text-xl">Chạm nhẹ để chọn ảnh nha...</p>
-                                    </div>
+                                    </button>
                                 ) : (
                                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                         {pendingFiles.map((item, i) => (
@@ -219,7 +230,7 @@ export function MemoriesSection() {
                                                 <div className="relative w-full h-full rounded-lg overflow-hidden">
                                                     <Image src={item.preview} alt="preview" fill className="object-cover" />
                                                 </div>
-                                                <button onClick={() => removePending(i)} className="absolute -top-2 -right-2 p-1.5 bg-rose-500 rounded-full text-white shadow-lg hover:bg-rose-600 transition-all opacity-0 group-hover:opacity-100 scale-90 hover:scale-110 z-20">
+                                                <button type="button" aria-label="Bỏ ảnh đã chọn" onClick={() => removePending(i)} className="absolute top-2 right-2 grid size-11 place-items-center bg-rose-600 rounded-full text-white shadow-lg hover:bg-rose-700 z-20">
                                                     <X className="w-3 h-3" />
                                                 </button>
                                             </div>
@@ -233,11 +244,11 @@ export function MemoriesSection() {
 
                             <input type="file" multiple accept="image/*" className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
 
-                            <div className="p-6 border-t border-stone-100 flex justify-between items-center bg-white/50 relative z-10">
+                            <div className="p-3 sm:p-6 border-t border-stone-100 flex flex-wrap gap-2 justify-between items-center bg-white/50 relative z-10">
                                 <p className="text-xs font-['Montserrat'] font-bold uppercase tracking-wider text-stone-400">{pendingFiles.length} photos selected</p>
                                 <div className="flex gap-3">
                                     <Button variant="ghost" className="text-stone-500 hover:text-stone-800 font-['Montserrat'] text-xs font-bold uppercase" onClick={() => { setPendingFiles([]); setIsAdding(false); }}>Cancel</Button>
-                                    <Button disabled={pendingFiles.length === 0 || uploading} onClick={handleUploadAll} className="bg-rose-500 hover:bg-rose-600 text-white px-8 py-2 rounded-xl shadow-lg shadow-rose-200 transition-all font-['Montserrat'] text-xs font-bold uppercase tracking-widest">
+                                    <Button disabled={pendingFiles.length === 0 || uploading} onClick={handleUploadAll} className="bg-rose-600 hover:bg-rose-700 text-white px-3 sm:px-8 h-11 rounded-xl shadow-lg shadow-rose-200 font-['Montserrat'] text-xs font-bold uppercase tracking-wide">
                                         {uploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : "Verify & Upload"}
                                     </Button>
                                 </div>
@@ -246,7 +257,8 @@ export function MemoriesSection() {
                     </Dialog>
                 </div>
 
-                <div className="flex-1 overflow-hidden flex items-center">
+                {deletionError && <p role="alert" className="mb-2 text-sm text-rose-800">Chưa xóa được ảnh. Bạn thử lại nhé.</p>}
+                <div className="min-h-0 flex-1 overflow-hidden flex items-center">
                     {loading ? (
                         <div className="flex gap-6 overflow-hidden opacity-50 w-full justify-center">
                             {[1, 2, 3].map(i => (
@@ -262,14 +274,14 @@ export function MemoriesSection() {
                             <p>Chưa có kỷ niệm nào được lưu lại. Thêm ngay đi nè!</p>
                         </div>
                     ) : (
-                        <div className="h-full w-full overflow-y-auto custom-scrollbar pr-4 pb-20 -mr-4">
+                        <div className="h-full w-full overflow-y-auto overflow-x-hidden px-1 pt-2 pb-28">
                             <Masonry
                                 breakpointCols={{
                                     default: 5,
                                     1536: 4,
                                     1280: 3,
                                     1024: 2,
-                                    640: 1
+                                    359: 1
                                 }}
                                 className="my-masonry-grid"
                                 columnClassName="my-masonry-grid_column"
@@ -279,8 +291,8 @@ export function MemoriesSection() {
                                         key={memory.id}
                                         memory={memory}
                                         idx={idx}
-                                        userId={user?.uid}
-                                        onDelete={handleDelete}
+                                        canDelete={canDelete(memory)}
+                                        onDelete={event => handleDelete(event, memory)}
                                     />
                                 ))}
                             </Masonry>
@@ -289,31 +301,6 @@ export function MemoriesSection() {
                 </div>
             </div>
 
-            <div className="absolute top-1/2 right-4 -translate-y-1/2 z-20">
-                <motion.button
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.5 }}
-                    onClick={(e: React.MouseEvent) => {
-                        const container = e.currentTarget.closest('.snap-x');
-                        if (container) {
-                            container.scrollBy({ left: window.innerWidth, behavior: 'smooth' });
-                        }
-                    }}
-                    className="group flex items-center gap-6 text-stone-400 hover:text-rose-500 transition-all"
-                >
-                    <span className="text-[10px] font-black uppercase tracking-[0.4em] [writing-mode:vertical-lr] rotate-180 transition-colors">
-                        See Our Future Plans
-                    </span>
-                    <div className="flex flex-col items-center gap-4">
-                        <div className="w-px h-20 bg-gradient-to-b from-transparent via-stone-300 to-stone-300 group-hover:via-rose-300 transition-all" />
-                        <motion.div whileHover={{ scale: 1.2 }} whileTap={{ scale: 0.9 }} animate={{ x: [0, 5, 0] }} transition={{ x: { duration: 2, repeat: Infinity, ease: "easeInOut" } }} className="p-5 bg-white/40 backdrop-blur-2xl rounded-3xl border border-white/60 shadow-[0_20px_40px_-12px_rgba(0,0,0,0.05)] group-hover:shadow-rose-100 group-hover:border-rose-100 transition-all">
-                            <ChevronRight className="w-6 h-6 text-stone-400 group-hover:text-rose-500" />
-                        </motion.div>
-                        <div className="w-px h-20 bg-gradient-to-t from-transparent via-stone-300 to-stone-300 group-hover:via-rose-300 transition-all" />
-                    </div>
-                </motion.button>
-            </div>
         </section>
     );
 }
